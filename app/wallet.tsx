@@ -1,36 +1,18 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   WalletCards,
-  LayoutDashboard,
   CalendarDays,
   Layers3,
   Settings2,
   Plus,
   ChevronRight,
   ChevronLeft,
-  ChevronDown,
-  ArrowUpRight,
-  Clock3,
-  Layers,
-  CalendarClock,
   Search,
   X,
-  Ellipsis,
   Download,
-  Check,
-  Eye,
   SquareStack,
-  Coins,
-  LayoutGrid,
-  ArrowRight,
   ArrowDownUp,
-  SlidersHorizontal,
-  NotebookTabs,
-  BellRing,
-  ScanLine,
-  Menu,
-  Trash2,
   PenLine,
   CalendarPlus,
 } from "lucide-react";
@@ -41,7 +23,6 @@ import {
   dateFrom,
   daysLeft,
   money,
-  symbols,
   calendarFile,
   Entry,
   shift,
@@ -50,10 +31,10 @@ import { atOrAfter, occurrencesBetween } from "@/lib/recurrence";
 import Importer, { requestJSON } from "./importer";
 type Tab = "overview" | "calendar" | "list" | "settings";
 const tabs = [
-  { key: "overview", name: "订阅总览", Icon: LayoutDashboard },
-  { key: "calendar", name: "到期日历", Icon: CalendarDays },
-  { key: "list", name: "全部订阅", Icon: Layers3 },
-  { key: "settings", name: "使用设置", Icon: Settings2 },
+  { key: "overview", name: "卡包", Icon: WalletCards },
+  { key: "calendar", name: "日历", Icon: CalendarDays },
+  { key: "list", name: "列表", Icon: Layers3 },
+  { key: "settings", name: "设置", Icon: Settings2 },
 ] as const;
 const shortDate = (s: string) =>
   s ? Number(s.slice(5, 7)) + "月" + Number(s.slice(8)) + "日" : "日期待确认";
@@ -84,52 +65,48 @@ function Brand() {
         <Layers3 size={25} strokeWidth={2.6} />
       </span>
       <b>有期</b>
-      <span className="wordmark">YOQI</span>
     </div>
   );
 }
 function CardArt({ slug }: { slug: string }) {
+  const isVideo = [
+    "tencent",
+    "mango",
+    "netflix",
+    "disney",
+    "youtube",
+    "bilibili",
+    "iqiyi",
+  ].includes(slug);
   return (
-    <svg aria-hidden="true" viewBox="0 0 280 240" className={"cardArt " + slug}>
-      <defs>
-        <linearGradient id="silk" x1="0" x2="1" y1="0" y2="1">
-          <stop stopColor="#fff" stopOpacity=".82" />
-          <stop offset=".45" stopColor="#d6f7ff" stopOpacity=".26" />
-          <stop offset="1" stopColor="#fff" stopOpacity=".06" />
-        </linearGradient>
-      </defs>
-      {slug === "tencent" ? (
-        <g transform="rotate(-16 150 115)">
-          {[0, 1, 2].map((k) => (
+    <svg aria-hidden="true" viewBox="0 0 250 240" className="cardArt">
+      <g
+        transform="translate(146 119) rotate(-18)"
+        fill="none"
+        stroke="currentColor"
+      >
+        {Array.from({ length: 18 }, (_, i) => {
+          const scale = 0.44 + i * 0.063;
+          const transform = `translate(${i * 0.6} ${-i * 0.65}) rotate(${i * 1.15}) scale(${scale})`;
+          return isVideo ? (
             <path
-              key={k}
-              d="M92 30 Q83 25 83 42 L83 189 Q83 209 101 198 L234 122 Q248 112 232 103 Z"
-              transform={"translate(" + k * -12 + "," + k * 4 + ")"}
-              fill="url(#silk)"
-              stroke="white"
-              strokeOpacity=".4"
-              strokeWidth="2.5"
+              key={i}
+              transform={transform}
+              d="M-61 -87 Q-61 -103 -47 -95 L93 -13 Q109 -4 93 6 L-46 89 Q-61 98 -61 81 Z"
             />
-          ))}
-        </g>
-      ) : (
-        <g transform="rotate(-25 145 100)">
-          {[0, 1, 2, 3].map((k) => (
+          ) : (
             <rect
-              key={k}
-              x={55 + k * 12}
-              y={28 + k * 9}
-              width="155"
-              height="134"
-              rx="44"
-              fill="url(#silk)"
-              stroke="white"
-              strokeOpacity=".45"
-              strokeWidth="2"
+              key={i}
+              transform={transform}
+              x="-73"
+              y="-73"
+              width="146"
+              height="146"
+              rx={slug === "spotify" || slug === "chatgpt" ? 67 : 35}
             />
-          ))}
-        </g>
-      )}
+          );
+        })}
+      </g>
     </svg>
   );
 }
@@ -252,7 +229,6 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
     [member, setMember] = useState<any>({ active: true, started: 0 }),
     [plan, setPlan] = useState<any>(null),
     [ai, setAI] = useState(false),
-    [loaded, setLoaded] = useState(false),
     [dbError, setDbError] = useState(""),
     [tab, setTab] = useState<Tab>("overview"),
     [demo, setDemo] = useState(true),
@@ -280,8 +256,6 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
       setDbError("");
     } catch (e: any) {
       setDbError(e.message);
-    } finally {
-      setLoaded(true);
     }
   }
   useEffect(() => {
@@ -334,7 +308,13 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
     total = expected
       .filter((e) => e.currency === "CNY")
       .reduce((n, e) => n + Number(e.amount), 0),
-    upcount = upcoming.filter((e) => daysLeft(e.date, today) <= 7).length;
+    deckSize = Math.min(4, items.length);
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
+  const lastSwipe = useRef(0);
+  function moveCard(by: number) {
+    if (items.length > 1)
+      setIndex((previous) => (previous + by + items.length) % items.length);
+  }
   const rows = (
     sortBy
       ? [...items].sort((a, b) => a.name.localeCompare(b.name, "zh"))
@@ -344,7 +324,12 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
       (filter === "全部" || e.kind === filter) &&
       e.name.toLowerCase().includes(q.toLowerCase()),
   );
-  const currentTab = tabs.find((t) => t.key === tab)!;
+  const pageTitles = {
+    overview: "订阅卡包",
+    calendar: "到期日历",
+    list: "全部订阅",
+    settings: "设置",
+  };
   function nav(v: Tab) {
     setTab(v);
     Q("");
@@ -416,22 +401,19 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
   );
   const list = () => (
     <section className="section listPanel">
-      {heading(
-        "全部订阅",
-        <div className="btnGroup">
-          <button
-            className="iconBtn"
-            onClick={() => S(!search)}
-            aria-label="搜索订阅"
-          >
-            <Search size={17} />
-          </button>
-          <button className="sortBtn" onClick={() => sort(!sortBy)}>
-            <ArrowDownUp size={14} />
-            {sortBy ? "按名称" : "按日期"}
-          </button>
-        </div>,
-      )}
+      <div className="listTools">
+        <button
+          className="iconBtn"
+          onClick={() => S(!search)}
+          aria-label="搜索订阅"
+        >
+          <Search size={17} />
+        </button>
+        <button className="sortBtn" onClick={() => sort(!sortBy)}>
+          <ArrowDownUp size={14} />
+          {sortBy ? "按名称" : "按日期"}
+        </button>
+      </div>
       {search && (
         <input
           className="search"
@@ -477,75 +459,55 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
         ))
       ) : (
         <div className="empty">
-          {items.length ? "没有匹配的订阅" : "添加第一条订阅后，会在这里显示。"}
+          {items.length ? "没有匹配的订阅" : "暂无订阅"}
         </div>
       )}
     </section>
   );
+  const navigation = (mode: "desktop" | "mobile") => (
+    <nav
+      className={mode === "desktop" ? "desktopNav" : "mobileNav"}
+      aria-label="主导航"
+    >
+      {tabs.map(({ key, name, Icon }) => (
+        <button
+          key={key}
+          aria-current={tab === key ? "page" : undefined}
+          className={tab === key ? "active" : ""}
+          onClick={() => nav(key)}
+        >
+          <Icon size={19} strokeWidth={tab === key ? 2.4 : 1.8} />
+          {name}
+        </button>
+      ))}
+    </nav>
+  );
   return (
     <div className="shell">
-      <aside className="sidebar">
-        <Brand />
-        <nav>
-          {tabs.slice(0, 3).map(({ key, name, Icon }) => (
-            <button
-              key={key}
-              onClick={() => nav(key)}
-              className={tab === key ? "active" : ""}
-            >
-              <Icon size={19} />
-              {name}
-            </button>
-          ))}
-        </nav>
-        <div className="sideBottom">
-          <button
-            className={tab === "settings" ? "active" : ""}
-            onClick={() => nav("settings")}
-          >
-            <Settings2 size={19} />
-            使用设置
-          </button>
-          <div className="profile">
-            <b className="avatar">Y</b>
-            <span>
-              我的账本<small>{status}</small>
-            </span>
-          </div>
+      <header className="masthead">
+        <div className="mastInner">
+          <Brand />
+          {navigation("desktop")}
         </div>
-      </aside>
+      </header>
       <main>
-        <div className="topline">
-          <div className="desktopCrumb">
-            <span className="crumbDot" />
-            <span>个人工作台</span>
-            <ChevronRight size={13} />
-            {currentTab.name}
-          </div>
-          <div className="mobileBrand">
-            <Brand />
-          </div>
-          <button className="trial" onClick={() => nav("settings")}>
-            <span />
-            {status}
-          </button>
-        </div>
         <header className="pageHeader">
-          <div>
-            <p className="dateLine">
-              {dateFrom(today).getFullYear()} 年 {Number(today.slice(5, 7))} 月{" "}
-              {Number(today.slice(8))} 日<span> / </span>
-              {"星期" + "日一二三四五六"[dateFrom(today).getDay()]}
-            </p>
-            <h1>{tab === "overview" ? "我的订阅" : currentTab.name}</h1>
+          <div className="pageTitle">
+            <h1>{pageTitles[tab]}</h1>
+            {demo && tab !== "settings" && (
+              <span className="demoLabel">示例</span>
+            )}
           </div>
-          <button
-            className="primary add"
-            onClick={() => start(ai ? "text" : "manual")}
-          >
-            <Plus size={18} />
-            添加订阅
-          </button>
+          {tab !== "settings" && (
+            <button
+              className="primary add"
+              aria-label="添加订阅"
+              onClick={() => start(ai ? "text" : "manual")}
+            >
+              <Plus size={21} strokeWidth={2.2} />
+              <span>添加订阅</span>
+            </button>
+          )}
         </header>
         {dbError && (
           <div className="warning">
@@ -557,156 +519,111 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
         )}
         {tab === "overview" && (
           <>
-            <div className="metrics">
-              <div>
-                <span className="metricIcon purple">
-                  <Coins size={19} />
-                </span>
-                <div>
-                  <small>30 天内预计续费</small>
-                  <strong>¥{total.toFixed(2)}</strong>
-                  <em>
-                    {expected.some((e) => e.currency !== "CNY")
-                      ? "仅计人民币"
-                      : "人民币"}
-                  </em>
-                </div>
-              </div>
-              <div>
-                <span className="metricIcon coral">
-                  <CalendarClock size={19} />
-                </span>
-                <div>
-                  <small>7 天内事项</small>
-                  <strong>
-                    {upcount}
-                    <i>笔</i>
-                  </strong>
-                </div>
-              </div>
-              <div>
-                <span className="metricIcon azure">
-                  <Layers size={19} />
-                </span>
-                <div>
-                  <small>管理中</small>
-                  <strong>
-                    {items.length}
-                    <i>项</i>
-                  </strong>
-                </div>
-              </div>
-            </div>
             <div className="dashGrid">
-              <section className="section walletPanel">
-                {heading(
-                  "订阅卡包",
-                  <span className="groupCount">
-                    {demo ? "示例账本" : items.length + " 张卡片"}
-                  </span>,
-                )}
+              <section className="walletPanel" aria-label="订阅卡片">
                 {curr ? (
                   <>
-                    <div className="deck">
-                      {Array.from(
-                        { length: Math.min(3, items.length) },
-                        (_, j) => {
-                          const n = Math.min(3, items.length) - 1 - j,
-                            r = items[(index + n) % items.length],
-                            slug = identifyBrand(r.name),
-                            b = (brands as any)[slug];
-                          return (
-                            <button
-                              key={r.id}
-                              className={
-                                "deckCard layer" + n + " brand-" + slug
-                              }
-                              style={
-                                {
-                                  "--card": b.dark,
-                                  "--tint": b.light,
-                                } as React.CSSProperties
-                              }
-                              onClick={() =>
-                                n
-                                  ? setIndex((index + n) % items.length)
-                                  : select(r)
-                              }
-                              aria-label={
-                                r.name + (n ? "，切换到此卡" : "，打开详情")
-                              }
-                            >
-                              <span className="deckName">
-                                <IconMark name={r.name} />
-                                <span>{r.name}</span>
-                                {n > 0 && <small>{r.cycle}</small>}
-                              </span>
-                              {n === 0 && (
-                                <>
-                                  <span className="deckChip">{r.cycle}</span>
-                                  <CardArt slug={slug} />
-                                  <span className="heroInfo">
-                                    <small>
-                                      {r.kind === "自动续费"
-                                        ? "预计扣款"
-                                        : r.kind === "账单还款"
-                                          ? "预计还款"
-                                          : "记录金额"}
-                                    </small>
-                                    <strong>{money(r)}</strong>
-                                  </span>
-                                  <span className="heroFoot">
-                                    <span>
-                                      <i />
-                                      {r.kind}
-                                    </span>
-                                    <b>
-                                      {shortDate(r.date)}{" "}
-                                      <ChevronRight size={14} />
-                                    </b>
-                                  </span>
-                                </>
-                              )}
-                            </button>
-                          );
-                        },
-                      )}
-                    </div>
-                    <div className="deckNav">
-                      <span>
-                        <b>
-                          {String((index % items.length) + 1).padStart(2, "0")}
-                        </b>
-                        <i> / </i>
-                        {String(items.length).padStart(2, "0")}
-                      </span>
-                      <div className="dots">
-                        {items.slice(0, 8).map((r, i) => (
+                    <div
+                      className="deck"
+                      style={
+                        { "--deck-count": deckSize } as React.CSSProperties
+                      }
+                      onTouchStart={(e) => {
+                        const point = e.touches[0];
+                        touchStart.current = {
+                          x: point.clientX,
+                          y: point.clientY,
+                        };
+                      }}
+                      onTouchCancel={() => {
+                        touchStart.current = null;
+                      }}
+                      onTouchEnd={(e) => {
+                        const start = touchStart.current;
+                        touchStart.current = null;
+                        if (!start || items.length < 2) return;
+                        const dx = e.changedTouches[0].clientX - start.x,
+                          dy = e.changedTouches[0].clientY - start.y;
+                        if (
+                          Math.abs(dx) > 40 &&
+                          Math.abs(dx) > 1.4 * Math.abs(dy)
+                        ) {
+                          lastSwipe.current = Date.now();
+                          moveCard(dx < 0 ? 1 : -1);
+                        }
+                      }}
+                    >
+                      {Array.from({ length: deckSize }, (_, j) => {
+                        const n = deckSize - 1 - j;
+                        const r = items[(index + n) % items.length];
+                        const slug = identifyBrand(r.name);
+                        const b = (brands as any)[slug];
+                        return (
                           <button
                             key={r.id}
-                            aria-label={"显示 " + r.name}
-                            className={index % items.length === i ? "on" : ""}
-                            onClick={() => setIndex(i)}
-                          />
-                        ))}
-                      </div>
-                      <div className="arrows">
+                            className={"deckCard" + (n ? " behind" : " front")}
+                            style={
+                              {
+                                "--level": n,
+                                "--slot": j,
+                                "--card": b.dark,
+                                "--tint": b.light,
+                              } as React.CSSProperties
+                            }
+                            onClick={() => {
+                              if (Date.now() - lastSwipe.current < 450) return;
+                              if (n) moveCard(n);
+                              else select(r);
+                            }}
+                            aria-label={
+                              r.name + (n ? "，切换到此卡" : "，打开详情")
+                            }
+                          >
+                            <span className="deckName">
+                              <IconMark name={r.name} />
+                              <b>{r.name}</b>
+                            </span>
+                            {n === 0 && (
+                              <>
+                                <span className="deckChip">{r.cycle}</span>
+                                <CardArt slug={slug} />
+                                <span className="heroFoot">
+                                  <span className="heroAmount">
+                                    <small>{r.kind}</small>
+                                    <strong>{money(r)}</strong>
+                                  </span>
+                                  <span className="heroDate">
+                                    <small>{due(r.date, today)}</small>
+                                    <b>{shortDate(r.date)}</b>
+                                  </span>
+                                </span>
+                              </>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {items.length > 1 && (
+                      <div className="deckNav">
                         <button
                           aria-label="上一张卡"
-                          onClick={() =>
-                            setIndex((index + items.length - 1) % items.length)
-                          }
+                          onClick={() => moveCard(-1)}
                         >
-                          <ChevronLeft size={16} />
+                          <ChevronLeft size={17} />
                         </button>
+                        <span className="pager" aria-live="polite">
+                          {(index % items.length) + 1}
+                          <i>/</i>
+                          {items.length}
+                        </span>
                         <button
                           aria-label="下一张卡"
-                          onClick={() => setIndex((index + 1) % items.length)}
+                          onClick={() => moveCard(1)}
                         >
-                          <ChevronRight size={16} />
+                          <ChevronRight size={17} />
                         </button>
                       </div>
-                    </div>
+                    )}
                   </>
                 ) : (
                   <button className="drop" onClick={() => start("manual")}>
@@ -715,51 +632,75 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
                   </button>
                 )}
               </section>
-              <section className="section upcoming">
-                {heading(
-                  "即将到期",
-                  <button
-                    className="iconBtn"
-                    aria-label="查看日历"
-                    onClick={() => nav("calendar")}
-                  >
-                    <ArrowUpRight size={18} />
-                  </button>,
-                )}
-                <div className="agenda">
-                  {upcoming.slice(0, 3).map((r) => (
-                    <button key={r.id} onClick={() => select(r)}>
-                      <span className="dateStamp">
-                        <small>{Number(r.date.slice(5, 7))}月</small>
-                        <b>{r.date.slice(8)}</b>
-                      </span>
-                      <span className="agendaName">
-                        <strong>{r.name}</strong>
-                        <small>
+              <div className="overviewSide">
+                <section className="forecast" aria-label="未来三十天续费">
+                  <span>
+                    30 天内预计续费
+                    {expected.some((e) => e.currency !== "CNY") && (
+                      <small>仅计人民币</small>
+                    )}
+                  </span>
+                  <strong>¥{total.toFixed(2)}</strong>
+                  {total > 0 && (
+                    <span className="spendBar" aria-hidden="true">
+                      {expected
+                        .filter(
+                          (e) => e.currency === "CNY" && Number(e.amount) > 0,
+                        )
+                        .map((e) => (
                           <i
+                            key={e.id + e.date}
                             style={{
-                              background: (brands as any)[identifyBrand(r.name)]
+                              flexGrow: Number(e.amount),
+                              background: (brands as any)[identifyBrand(e.name)]
                                 .color,
                             }}
                           />
-                          {r.kind} · {due(r.date, today)}
-                        </small>
-                      </span>
-                      <b>{money(r)}</b>
-                    </button>
-                  ))}
-                  {!upcoming.length && (
-                    <div className="empty">暂时没有即将到期的记录</div>
+                        ))}
+                    </span>
                   )}
-                </div>
-                <button className="allCal" onClick={() => nav("calendar")}>
-                  <CalendarDays size={15} />
-                  查看完整日历
-                  <ArrowRight size={14} />
-                </button>
-              </section>
+                </section>
+                <section className="upcoming">
+                  {heading(
+                    "近期事项",
+                    <button
+                      className="iconBtn"
+                      aria-label="查看日历"
+                      onClick={() => nav("calendar")}
+                    >
+                      <CalendarDays size={18} />
+                    </button>,
+                  )}
+                  <div className="agenda">
+                    {upcoming.slice(0, 4).map((r) => (
+                      <button key={r.id} onClick={() => select(r)}>
+                        <span className="dateStamp">
+                          <small>{Number(r.date.slice(5, 7))}月</small>
+                          <b>{r.date.slice(8)}</b>
+                        </span>
+                        <span className="agendaName">
+                          <strong>{r.name}</strong>
+                          <small>
+                            <i
+                              style={{
+                                background: (brands as any)[
+                                  identifyBrand(r.name)
+                                ].color,
+                              }}
+                            />
+                            {r.kind} · {due(r.date, today)}
+                          </small>
+                        </span>
+                        <b>{money(r)}</b>
+                      </button>
+                    ))}
+                    {!upcoming.length && (
+                      <div className="empty">暂无近期事项</div>
+                    )}
+                  </div>
+                </section>
+              </div>
             </div>
-            {list()}
           </>
         )}
         {tab === "list" && list()}
@@ -769,14 +710,13 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
         {tab === "settings" && (
           <div className="settings">
             <section className="section">
-              {heading("使用权益")}
               <div className="memberHero">
                 <SquareStack size={28} />
                 <h2>{status}</h2>
                 <p>
                   {member.started
-                    ? "权益截止 " + new Date(member.end).toLocaleString("zh-CN")
-                    : "首次保存记录或成功使用 AI 后开始计时。试用期间截图和文字导入均免费。"}
+                    ? "有效至 " + new Date(member.end).toLocaleString("zh-CN")
+                    : "首次保存或成功识别后起算，含截图和文字导入。"}
                 </p>
               </div>
               {plan?.ready ? (
@@ -796,15 +736,13 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
                   支付宝购买 {plan.days} 天 · ¥{plan.price}
                 </button>
               ) : (
-                <p className="hint">付费方案待开放，试用结束后由你主动购买。</p>
+                <p className="hint">付费方案待开放，到期可主动续期。</p>
               )}
             </section>
             <section className="section">
-              {heading("账本设置")}
               <div className="settingRow">
                 <span>
                   <b>示例账本</b>
-                  <small>预览卡包，随时切回个人记录</small>
                 </span>
                 <button
                   className="soft"
@@ -818,7 +756,7 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
                     nav("overview");
                   }}
                 >
-                  {demo ? "查看我的账本" : "查看示例"}
+                  {demo ? "返回我的卡包" : "查看示例"}
                 </button>
               </div>
               <div className="settingRow">
@@ -826,12 +764,12 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
                   <b>截图与文字识别</b>
                   <small>gpt-6.2-sol</small>
                 </span>
-                <small>{ai ? "可用" : "等待服务端密钥"}</small>
+                <small>{ai ? "可用" : "待开通"}</small>
               </div>
               <div className="settingRow">
                 <span>
                   <b>iPhone 日历提醒</b>
-                  <small>在订阅详情点击「加入日历」，按系统提示导入。</small>
+                  <small>打开订阅，点「加入日历」。</small>
                 </span>
                 <CalendarPlus size={18} />
               </div>
@@ -839,18 +777,7 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
           </div>
         )}
       </main>
-      <nav className="mobileNav">
-        {tabs.map(({ key, Icon, name }) => (
-          <button
-            key={key}
-            className={tab === key ? "active" : ""}
-            onClick={() => nav(key)}
-          >
-            <Icon size={20} />
-            {name}
-          </button>
-        ))}
-      </nav>
+      {navigation("mobile")}
       {detail && !imp && (
         <div
           className="modalLayer"
@@ -873,7 +800,14 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
                 <X size={19} />
               </button>
             </div>
-            <div className="detailTop">
+            <div
+              className="detailTop"
+              style={
+                {
+                  "--accent": (brands as any)[identifyBrand(detail.name)].dark,
+                } as React.CSSProperties
+              }
+            >
               <small>{detail.kind}</small>
               <strong>{money(detail)}</strong>
             </div>
@@ -885,7 +819,7 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
                   "日历提醒",
                   detail.remind ? "提前 " + detail.remind + " 天" : "当天",
                 ],
-                ["备注", detail.note || "—"],
+                ...(detail.note ? [["备注", detail.note]] : []),
               ].map(([k, v]) => (
                 <div key={k}>
                   <dt>{k}</dt>
