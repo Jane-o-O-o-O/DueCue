@@ -1,12 +1,12 @@
 "use client";
 import { useState, useRef } from "react";
+import { badge, identifyBrand } from "../public/brands.js";
 import {
   AlignLeft,
   ImagePlus,
   PenLine,
   X,
   Plus,
-  ArrowRight,
   ScanLine,
   Check,
   Calendar,
@@ -184,7 +184,7 @@ export default function Importer({
         role="dialog"
         aria-modal="true"
         aria-label={edit ? "编辑订阅" : "添加订阅"}
-        className="sheet"
+        className="sheet importSheet"
       >
         <div className="sheetHead">
           <div>
@@ -232,7 +232,7 @@ export default function Importer({
             <div className="formBox">
               {mode === "text" ? (
                 <label>
-                  用一句话描述订阅
+                  订阅描述
                   <textarea
                     autoFocus
                     maxLength={4000}
@@ -270,8 +270,8 @@ export default function Importer({
                   >
                     <ImagePlus size={28} />
                     {images.length
-                      ? "已选择 " + images.length + " 张，点击重选"
-                      : "从相册选择截图"}
+                      ? "已选 " + images.length + " 张 · 重选"
+                      : "选择截图"}
                   </button>
                   {images.length > 0 && (
                     <div className="thumbs">
@@ -281,7 +281,8 @@ export default function Importer({
                     </div>
                   )}
                   <label>
-                    截图日期 · 不同日期的截图请分批导入
+                    截图日期
+                    {images.length > 1 && <small>不同日期请分批导入</small>}
                     <input
                       type="date"
                       value={base}
@@ -293,8 +294,8 @@ export default function Importer({
             </div>
             <p className="hint">
               {ai
-                ? "提交后，所选内容将发送给 GPT-6.2 Sol 识别。"
-                : "AI 服务待配置，当前可手动添加完整记录。"}
+                ? "所选内容将发送给 OpenAI 识别。"
+                : "AI 识别待开通，可手动添加。"}
             </p>
             {error && (
               <p className="error" role="alert">
@@ -304,7 +305,9 @@ export default function Importer({
             <button
               className="primary wide"
               disabled={
-                !!busy || (mode === "text" ? !input.trim() : !images.length)
+                !ai ||
+                !!busy ||
+                (mode === "text" ? !input.trim() : !images.length)
               }
               onClick={recognize}
             >
@@ -312,7 +315,7 @@ export default function Importer({
               {busy ? (
                 <LoaderCircle className="spin" size={17} />
               ) : (
-                <ArrowRight size={17} />
+                <ScanLine size={17} />
               )}
             </button>
           </>
@@ -325,7 +328,7 @@ export default function Importer({
             )}
             {d.picture && (
               <details className="proof">
-                <summary>展开原图核对数字</summary>
+                <summary>查看原图</summary>
                 <img src={d.picture} alt="待核对的截图原图" />
               </details>
             )}
@@ -337,17 +340,26 @@ export default function Importer({
             )}
             <div className="fields">
               <label className="full">
-                平台或服务名称
-                <input
-                  autoFocus
-                  maxLength={80}
-                  placeholder="例如：芒果 TV"
-                  value={d.name}
-                  onChange={(e) => change("name", e.target.value)}
-                />
+                服务名称
+                <span className="nameEntry">
+                  <span
+                    className="platformIcon"
+                    aria-hidden="true"
+                    dangerouslySetInnerHTML={{
+                      __html: badge(identifyBrand(d.name)),
+                    }}
+                  />
+                  <input
+                    autoFocus
+                    maxLength={80}
+                    placeholder="例如：芒果 TV"
+                    value={d.name}
+                    onChange={(e) => change("name", e.target.value)}
+                  />
+                </span>
               </label>
               <label>
-                事项类型
+                类型
                 <select
                   value={d.kind}
                   onChange={(e) => change("kind", e.target.value)}
@@ -441,7 +453,7 @@ export default function Importer({
                   )
                 }
               >
-                <Calendar size={15} /> 先在 7 天后提醒我核对
+                <Calendar size={15} /> 7 天后提醒核对
               </button>
             )}
             {error && (
@@ -464,10 +476,10 @@ export default function Importer({
                 <Check size={17} />
                 {busy ||
                   (step < drafts.length - 1
-                    ? "确认并看下一条"
+                    ? "确认，下一条"
                     : edit
                       ? "保存更改"
-                      : "确认保存")}
+                      : "保存订阅")}
               </button>
             </div>
           </>
