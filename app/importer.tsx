@@ -1,5 +1,6 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, useLayoutEffect } from "react";
+import { reducedMotion } from "./motion";
 import { badge, identifyBrand } from "../public/brands.js";
 import {
   AlignLeft,
@@ -70,6 +71,25 @@ function getImage(file: File) {
     img.src = url;
   });
 }
+function ScreenshotProof({ picture }: { picture: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="proof">
+      <button
+        className="textBtn"
+        aria-expanded={open}
+        onClick={() => setOpen(!open)}
+      >
+        {open ? "收起原图" : "查看原图"}
+      </button>
+      <div className="fold" data-open={open} inert={!open} aria-hidden={!open}>
+        <div>
+          <img src={picture} alt="待核对的截图原图" />
+        </div>
+      </div>
+    </div>
+  );
+}
 export default function Importer({
   edit,
   initialMode,
@@ -95,10 +115,37 @@ export default function Importer({
     [busy, setBusy] = useState("");
   const file = useRef<HTMLInputElement>(null);
   const d = drafts[step];
+  const sheet = useRef<HTMLElement>(null);
+  const oldHeight = useRef(0);
+  const resize = useRef<Animation | null>(null);
+  const stage = mode + ":" + (d ? step : "input");
+  function rememberSheet() {
+    oldHeight.current = sheet.current?.getBoundingClientRect().height || 0;
+  }
+  useLayoutEffect(() => {
+    const node = sheet.current,
+      from = oldHeight.current;
+    oldHeight.current = 0;
+    if (!node?.animate || !from || reducedMotion()) return;
+    const to = node.getBoundingClientRect().height;
+    if (Math.abs(to - from) < 2) return;
+    resize.current = node.animate(
+      [{ height: from + "px" }, { height: to + "px" }],
+      {
+        duration: 220,
+        easing: "cubic-bezier(.22,1,.36,1)",
+      },
+    );
+    return () => {
+      resize.current?.cancel();
+    };
+  }, [stage]);
   function change(k: keyof Draft, v: any) {
     setDrafts((ds) => ds.map((a, i) => (i === step ? { ...a, [k]: v } : a)));
   }
   function choose(m: string) {
+    if (m === mode) return;
+    rememberSheet();
     setMode(m);
     setDrafts(m === "manual" ? [blank()] : []);
     setStep(0);
@@ -144,6 +191,7 @@ export default function Importer({
         throw Error(
           "没有读到订阅信息。可以裁剪包含续费说明的区域，或手动填写。",
         );
+      rememberSheet();
       setDrafts(items);
       setStep(0);
     } catch (e: any) {
@@ -160,6 +208,7 @@ export default function Importer({
       return;
     }
     if (step + 1 < drafts.length) {
+      rememberSheet();
       setStep(step + 1);
       return;
     }
@@ -174,59 +223,64 @@ export default function Importer({
     }
   }
   return (
-    <div
-      className="modalLayer"
-      onClick={(e) => {
-        if (e.target === e.currentTarget && !busy) close();
-      }}
+    <section
+      role="dialog"
+      aria-modal="true"
+      aria-label={edit ? "编辑订阅" : "添加订阅"}
+      aria-busy={!!busy}
+      ref={sheet}
+      className="sheet importSheet"
     >
-      <section
-        role="dialog"
-        aria-modal="true"
-        aria-label={edit ? "编辑订阅" : "添加订阅"}
-        className="sheet importSheet"
-      >
-        <div className="sheetHead">
-          <div>
-            <span className="miniIcon">
-              <ScanLine size={18} />
-            </span>
-            <h2>
-              {edit
-                ? "编辑订阅"
-                : d && mode !== "manual"
-                  ? "核对识别结果"
-                  : "添加订阅"}
-            </h2>
-          </div>
-          <button
-            className="iconBtn"
-            onClick={close}
-            disabled={!!busy}
-            aria-label="关闭"
-          >
-            <X size={19} />
-          </button>
+      <div className="sheetHead">
+        <div>
+          <span className="miniIcon">
+            <ScanLine size={18} />
+          </span>
+          <h2>
+            {edit
+              ? "编辑订阅"
+              : d && mode !== "manual"
+                ? "核对识别结果"
+                : "添加订阅"}
+          </h2>
         </div>
-        {!edit && (!d || mode === "manual") && (
-          <div className="segments">
-            {[
-              ["text", "文字", AlignLeft],
-              ["image", "截图", ImagePlus],
-              ["manual", "手动", PenLine],
-            ].map(([key, label, I]: any) => (
-              <button
-                key={key}
-                disabled={!!busy}
-                className={mode === key ? "sel" : ""}
-                onClick={() => choose(key)}
-              >
-                <I size={16} />
-                {label}
-              </button>
-            ))}
-          </div>
-        )}
+        <button
+          className="iconBtn"
+          onClick={close}
+          disabled={!!busy}
+          aria-label="关闭"
+        >
+          <X size={19} />
+        </button>
+      </div>
+      {!edit && (!d || mode === "manual") && (
+        <div
+          className="segments"
+          style={
+            {
+              "--choice": ["text", "image", "manual"].indexOf(mode),
+            } as React.CSSProperties
+          }
+        >
+          {[
+            ["text", "文字", AlignLeft],
+            ["image", "截图", ImagePlus],
+            ["manual", "手动", PenLine],
+          ].map(([key, label, I]: any) => (
+            <button
+              key={key}
+              aria-pressed={mode === key}
+              disabled={!!busy}
+              className={mode === key ? "sel" : ""}
+              onClick={() => choose(key)}
+            >
+              <I size={16} />
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
+      <div className="formStage motionReveal" key={stage}>
         {!d ? (
           <>
             <div className="formBox">
@@ -326,12 +380,7 @@ export default function Importer({
                 第 {step + 1} 条，共 {drafts.length} 条
               </p>
             )}
-            {d.picture && (
-              <details className="proof">
-                <summary>查看原图</summary>
-                <img src={d.picture} alt="待核对的截图原图" />
-              </details>
-            )}
+            {d.picture && <ScreenshotProof picture={d.picture} />}
             {d.evidence && <blockquote>{d.evidence}</blockquote>}
             {d.uncertainty && (
               <p className="warning">
@@ -343,7 +392,8 @@ export default function Importer({
                 服务名称
                 <span className="nameEntry">
                   <span
-                    className="platformIcon"
+                    key={identifyBrand(d.name)}
+                    className="platformIcon motionReveal"
                     aria-hidden="true"
                     dangerouslySetInnerHTML={{
                       __html: badge(identifyBrand(d.name)),
@@ -463,7 +513,13 @@ export default function Importer({
             )}
             <div className="actions">
               {step > 0 && (
-                <button className="soft" onClick={() => setStep(step - 1)}>
+                <button
+                  className="soft"
+                  onClick={() => {
+                    rememberSheet();
+                    setStep(step - 1);
+                  }}
+                >
                   <ChevronLeft size={16} />
                   上一条
                 </button>
@@ -473,7 +529,11 @@ export default function Importer({
                 className="primary wide"
                 onClick={submit}
               >
-                <Check size={17} />
+                {busy ? (
+                  <LoaderCircle className="spin" size={17} />
+                ) : (
+                  <Check size={17} />
+                )}
                 {busy ||
                   (step < drafts.length - 1
                     ? "确认，下一条"
@@ -484,7 +544,7 @@ export default function Importer({
             </div>
           </>
         )}
-      </section>
-    </div>
+      </div>
+    </section>
   );
 }
