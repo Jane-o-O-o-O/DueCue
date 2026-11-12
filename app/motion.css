@@ -1,0 +1,304 @@
+.shell {
+  --settle: cubic-bezier(0.22, 1, 0.36, 1);
+  --glide: cubic-bezier(0.32, 0.02, 0.18, 1);
+}
+button,
+summary {
+  transition:
+    scale 150ms var(--settle),
+    background-color 160ms ease,
+    color 140ms ease,
+    border-color 160ms ease,
+    box-shadow 180ms ease,
+    opacity 130ms ease;
+}
+button:active:not(:disabled),
+summary:active {
+  scale: 0.97;
+  transition-duration: 70ms;
+}
+.agenda button:active,
+.tableRow:active,
+.deckCard:active,
+.dateRow:active {
+  scale: 0.993;
+}
+.sheet :is(input, select, textarea),
+.search {
+  transition:
+    border-color 150ms ease,
+    box-shadow 160ms ease,
+    background-color 150ms ease;
+}
+.sheet :is(input, select, textarea):focus,
+.search:focus {
+  border-color: #8f86d2;
+  box-shadow: 0 0 0 3px #8980cf20;
+  background-color: #fff;
+}
+@media (hover: hover) and (pointer: fine) {
+  .primary:hover:not(:disabled) {
+    background-color: #393943;
+    box-shadow: 0 3px 9px #23253520;
+  }
+  :is(.tableRow, .agenda button, .dateRow):hover {
+    background-color: #77758909;
+  }
+  :is(.segments, .filters, .desktopNav, .mobileNav) button:hover {
+    color: #403954;
+  }
+}
+/* One moving surface across a segmented choice keeps the controls stationary. */
+.desktopNav,
+.mobileNav,
+.segments {
+  --slots: 4;
+  --pad: 0px;
+  --space: 4px;
+  isolation: isolate;
+}
+.desktopNav,
+.segments {
+  position: relative;
+}
+.segments {
+  --slots: 3;
+  --pad: 4px;
+  --space: 2px;
+}
+.mobileNav {
+  --pad: 5px;
+  --space: 2px;
+}
+:is(.desktopNav, .mobileNav, .segments)::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+  top: var(--pad);
+  bottom: var(--pad);
+  left: var(--pad);
+  width: calc(
+    (100% - 2 * var(--pad) - (var(--slots) - 1) * var(--space)) / var(--slots)
+  );
+  transform: translateX(calc(var(--choice) * (100% + var(--space))));
+  transition: transform 280ms var(--settle);
+  border-radius: 22px;
+  background: #eae9f1;
+}
+.segments::before {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px #2923381a;
+}
+.mobileNav::before {
+  background: #eeedf5;
+  border-radius: 19px;
+}
+:is(.desktopNav, .mobileNav) .active,
+.segments .sel {
+  background: transparent;
+  box-shadow: none;
+}
+.desktopNav button,
+.mobileNav button,
+.segments button {
+  min-width: 0;
+  justify-content: center;
+}
+@media (min-width: 681px) {
+  .desktopNav {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+  }
+}
+@media (max-width: 680px) {
+  .mobileNav {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+.segments {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.fold {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    grid-template-rows 230ms var(--settle),
+    opacity 150ms ease,
+    visibility 0s linear 230ms;
+}
+.fold[data-open="true"] {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0s;
+}
+.fold > div {
+  min-height: 0;
+  overflow: hidden;
+}
+.fold .search {
+  margin: 3px 0 10px;
+  width: calc(100% - 8px);
+  margin-inline: 4px;
+}
+.cardGhosts {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  pointer-events: none;
+}
+.cardGhosts * {
+  pointer-events: none !important;
+}
+.sortBtn svg {
+  transition: transform 220ms var(--settle);
+}
+.sortBtn[aria-pressed="true"] svg {
+  transform: rotate(180deg);
+}
+.deleteBtn {
+  min-height: 40px;
+  border-radius: 10px;
+}
+.deleteBtn[data-confirm="true"] {
+  background-color: #fff0f1;
+  color: #923040;
+}
+.actionLabel {
+  display: inline-block;
+}
+.modalLayer[data-leaving="true"] .sheet {
+  pointer-events: none;
+}
+@keyframes movePanel {
+  from {
+    opacity: 0;
+    transform: translate3d(calc(13px * var(--direction, 1)), 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes riseIn {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 5px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes veilIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes sheetIn {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0) scale(0.982);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes drawerIn {
+  from {
+    opacity: 0.25;
+    transform: translate3d(0, 48px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 7px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+@keyframes toastOut {
+  to {
+    opacity: 0;
+    transform: translate(-50%, 3px);
+  }
+}
+.motionSlide {
+  animation: movePanel 240ms var(--settle);
+}
+.motionReveal,
+.actionLabel,
+.monthLabel,
+.empty,
+.error,
+.warning,
+.thumbs img {
+  animation: riseIn 190ms var(--settle);
+}
+.front .heroFoot {
+  animation: riseIn 210ms var(--settle);
+}
+.modalLayer {
+  animation: veilIn 180ms ease-out;
+}
+.modalLayer .sheet {
+  animation: sheetIn 270ms var(--settle);
+}
+.toast {
+  animation:
+    toastIn 200ms var(--settle),
+    toastOut 180ms ease-in 3320ms forwards;
+}
+@media (max-width: 680px) {
+  .modalLayer .sheet {
+    animation: drawerIn 300ms var(--settle);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .shell *,
+  .shell *::before,
+  .shell *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+  .shell button:active:not(:disabled),
+  .shell summary:active {
+    scale: 1;
+  }
+}
+.deck > .front {
+  translate: var(--drag-x, 0px) 0;
+  rotate: var(--drag-tilt, 0deg);
+  transition:
+    translate 210ms var(--settle),
+    rotate 210ms var(--settle),
+    scale 130ms var(--settle);
+}
+.deck[data-dragging] > .front {
+  transition: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .deck > .front {
+    translate: none;
+    rotate: none;
+  }
+}

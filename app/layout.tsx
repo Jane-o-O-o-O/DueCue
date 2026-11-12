@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import "./motion.css";
 export const metadata: Metadata = {
   title: "有期 · 订阅手账",
   description: "把订阅、续费和到期日收进同一个卡包",
