@@ -16,7 +16,12 @@ import {
   PenLine,
   CalendarPlus,
 } from "lucide-react";
-import { brands, identifyBrand, badge } from "../public/brands.js";
+import {
+  brands,
+  identifyBrand,
+  badge,
+  carrierArtwork,
+} from "../public/brands.js";
 import {
   examples,
   iso,
@@ -76,6 +81,28 @@ function Brand() {
   );
 }
 function CardArt({ slug }: { slug: string }) {
+  const emblem = carrierArtwork(slug);
+  if (emblem) {
+    return (
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 36 36"
+        className="cardArt carrierArt"
+      >
+        {emblem.map(({ d, width }) => (
+          <path
+            key={d}
+            d={d}
+            fill={width ? "none" : "currentColor"}
+            stroke={width ? "currentColor" : "none"}
+            strokeWidth={width}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        ))}
+      </svg>
+    );
+  }
   const isVideo = [
     "tencent",
     "mango",

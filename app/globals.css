@@ -295,6 +295,13 @@ h1 {
   opacity: 0.41;
   stroke-width: 0.95;
 }
+.cardArt.carrierArt {
+  opacity: 0.18;
+  top: -7%;
+  right: -6%;
+  width: 61%;
+  height: 110%;
+}
 .heroFoot {
   position: relative;
   z-index: 1;

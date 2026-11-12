@@ -71,6 +71,27 @@ export const brands = {
     light: "#53A5F4",
     glyph: "花",
   },
+  "china-mobile": {
+    name: "中国移动",
+    color: "#008DB3",
+    dark: "#005C80",
+    light: "#00798C",
+    glyph: "移",
+  },
+  "china-unicom": {
+    name: "中国联通",
+    color: "#CE263C",
+    dark: "#9B1731",
+    light: "#C5343E",
+    glyph: "联",
+  },
+  "china-telecom": {
+    name: "中国电信",
+    color: "#315BC6",
+    dark: "#173983",
+    light: "#4B5FBF",
+    glyph: "电",
+  },
   mobile: {
     name: "手机套餐",
     color: "#51A6C2",
@@ -119,7 +140,20 @@ const aliases = [
   ["claude", /claude|anthropic|克劳德/],
   ["bilibili", /哔哩|哔站|b站|bilibili/],
   ["huabei", /花呗|huabei/],
-  ["mobile", /手机(?:号|卡|套餐)|电话(?:卡|套餐)|话费|移动|联通|电信|mobile/],
+  [
+    "china-mobile",
+    /中[国國]\s*移\s*[动動]|中移[动動]|china[\s-]*mobile|\bcmcc\b/,
+  ],
+  [
+    "china-mobile",
+    /移\s*[动動](?=$|[\s\d·（(／/-]|手[机機]|[电電][话話]|[话話][费費]|[号號卡]|[主副]卡|套餐|月租|[月年][费費]|[账帳賬][单單]|[宽寬][带帶]|流量|通信|全球通|神州行|[动動]感地[带帶]|[畅暢飞飛]享)/,
+  ],
+  ["china-unicom", /[联聯]\s*通|china[\s-]*unicom|\bunicom\b/],
+  ["china-telecom", /[电電]\s*信|china[\s-]*telecom/],
+  [
+    "mobile",
+    /手[机機](?:[号號]|卡|套餐)|[电電][话話](?:卡|套餐)|[话話][费費]|移[动動]|mobile/,
+  ],
   ["disney", /disney|迪士尼/],
   ["youtube", /youtube|油管/],
   ["iqiyi", /爱奇艺|iqiyi/],
@@ -140,6 +174,63 @@ export function identifyBrand(name) {
 const tile = (fill) =>
   `<rect x=".5" y=".5" width="35" height="35" rx="9" fill="${fill}"/>`;
 
+// Original compact emblems. The same paths are used for the badge and the embossed card face.
+/** @type {Record<string, { d: string, color: string, width?: number }[]>} */
+const carrierPaths = {
+  "china-mobile": [
+    {
+      color: "#007FB5",
+      d: "M4 18.5 14.9 7.6a4.4 4.4 0 0 1 6.2 0l2.6 2.6-3.1 3.1-2.6-2.6L7.1 21.6Z",
+    },
+    { color: "#0097C4", d: "m8.8 23.1 13.6-13.6 3.2 3.2L12 26.3Z" },
+    {
+      color: "#0A82B5",
+      d: "m12.6 26.9 3.1-3.1 2.4 2.4 10.8-10.8 3.1 3.1-10.8 10.8a4.4 4.4 0 0 1-6.2 0Z",
+    },
+    { color: "#83BA32", d: "m21.4 18.5 6.8-6.8 3.1 3.1-6.8 6.8Z" },
+  ],
+  "china-unicom": [
+    {
+      color: "#D3233B",
+      width: 2.4,
+      d: "M4.7 18 15.8 6.9q2.2-2.2 4.4 0l3.1 3.1-3.1 3.1L18 10.9 10.9 18l7.1 7.1 2.2-2.2 3.1 3.1-3.1 3.1q-2.2 2.2-4.4 0Z",
+    },
+    {
+      color: "#D3233B",
+      width: 2.4,
+      d: "M31.3 18 20.2 6.9M31.3 18 20.2 29.1M13.1 13.1 23 23m-9.9 0 9.9-9.9M23.1 14.1l3.9 3.9-3.9 3.9",
+    },
+  ],
+  "china-telecom": [
+    {
+      color: "#2352B2",
+      d: "M5.4 15.1c4.2-6.1 13.1-9.6 24.8-7.9l-3.3 4.2c-7.5-.5-15.5 1-21.5 3.7Z",
+    },
+    {
+      color: "#2352B2",
+      d: "m17.9 12.2 6-.9-6.8 9.3c-.9 1.3-.6 2.2 1.1 2.2 2.7 0 6.7-1.2 10-3.2-3.4 4.1-9.5 7.6-15.1 7.2-3.2-.2-3.9-2.3-2.1-4.8Z",
+    },
+    {
+      color: "#3B72CD",
+      d: "M6.2 20.8c-2 5.6 1.8 9.9 8.8 9.2 4.6-.4 9.6-2.8 13.8-7.2-5.1 3.2-9.6 4.7-13.5 4.7-5.6.1-8.9-2.2-9.1-6.7Z",
+    },
+  ],
+};
+export function carrierArtwork(slug) {
+  return Object.hasOwn(carrierPaths, slug) ? carrierPaths[slug] : undefined;
+}
+function carrierBadge(slug) {
+  return (
+    tile("#FAFCFF") +
+    carrierPaths[slug]
+      .map(({ color, d, width }) =>
+        width
+          ? `<path d="${d}" fill="none" stroke="${color}" stroke-width="${width}" stroke-linejoin="round" stroke-linecap="round"/>`
+          : `<path d="${d}" fill="${color}"/>`,
+      )
+      .join("")
+  );
+}
 // All strings below are fixed artwork. Caller-supplied labels never enter SVG.
 const marks = {
   chatgpt:
@@ -186,6 +277,9 @@ const marks = {
   huabei:
     tile("#EAF5FF") +
     '<g fill="none" stroke="#1E83EB" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7.8 18.2c1.2-6.8 6.6-10.5 13.2-8.8l6.5 2.1-4.6.9m4.6-.9-1.2-4.1M28.5 19.7c-2.8 6.1-8.9 8.6-14.4 6.3l-5.8-2.9 4.8-.5m-4.8.5 1.4 4.3"/><path d="m13.3 17.6 3.4 2.7 6.4-5.6"/></g>',
+  "china-mobile": carrierBadge("china-mobile"),
+  "china-unicom": carrierBadge("china-unicom"),
+  "china-telecom": carrierBadge("china-telecom"),
   mobile:
     tile("#ECF7FD") +
     '<g fill="none" stroke="#237DAB" stroke-linecap="round" stroke-linejoin="round"><rect x="10.5" y="5.6" width="15" height="25" rx="3.2" stroke-width="2"/><path d="M15.5 8h5m-3.9 19.6h2.8" stroke-width="1.7"/><path d="M14.4 20.5v-1.8m3.6 1.8v-4.6m3.5 4.6v-7.2" stroke-width="2"/></g>',
