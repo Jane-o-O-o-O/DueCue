@@ -14,7 +14,7 @@ node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1
 
 ## 模型与商户配置
 
-服务端配置新生成的 `OPENAI_API_KEY`。文字及截图识别固定调用 Responses API 的 `gpt-6.2-sol`。图片只在用户提交识别时发送，识别请求使用 `store: false`，业务数据库保存核对后的字段与证据文字。截图日期缺失时不会用上传日换算倒计时。
+服务端配置新生成的 `OPENAI_API_KEY`。已配置密钥时，云端识别使用 Responses API 的 `gpt-6.2-sol`，请求设置 `store: false`。未配置密钥时，图片由浏览器同源加载的 Tesseract LSTM 中英文模型读取，字段在本机提取和核对。首次本机识别成功后仅向服务端登记试用，保存时才提交用户确认的记录，业务数据库保存核对后的字段与证据文字。截图日期缺失时不会用上传日换算倒计时。
 
 支付宝购买入口需同时配置 `PLAN_PRICE_CNY`、`PLAN_DAYS`、`ALIPAY_APP_ID`、`ALIPAY_SELLER_ID`、`ALIPAY_PRIVATE_KEY`（PKCS#8）、`ALIPAY_PUBLIC_KEY` 和 `ALIPAY_NOTIFY_URL`。商品为主动购买的固定时长权益，价格和时长由商户确定。收款方须开通对应手机网站支付产品，并确保支付宝能访问公开 HTTPS 异步通知地址 `/api/alipay/notify`。当前私有预览用于开发，开放购买前需用商户配置完成端到端支付、通知和订单核对。签名与通知均采用 RSA2，数据库按订单幂等发放权益。
 

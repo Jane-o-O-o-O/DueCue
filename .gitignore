@@ -43,3 +43,6 @@ yarn-error.log*
 
 # OS metadata
 .DS_Store
+
+# Rebuilt from the locked OCR packages before dev/build.
+/public/ocr-v7/
