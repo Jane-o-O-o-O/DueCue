@@ -575,58 +575,151 @@ h1 {
   color: #898592;
   padding: 26px 8px;
 }
-.calendarScreen h3 {
-  margin-top: 20px;
-  font-size: 15px;
+.calendarScreen {
+  --event-ink: #164f88;
+  --event-surface: #e4f1ff;
+  --event-edge: #82add6;
+}
+.calendarScreen [data-kind="会员到期"] {
+  --event-ink: #794100;
+  --event-surface: #fff0cb;
+  --event-edge: #d9aa54;
+}
+.calendarScreen [data-kind="账单还款"] {
+  --event-ink: #932a45;
+  --event-surface: #ffe7ee;
+  --event-edge: #d993a6;
+}
+.calendarScreen [data-kind="提醒复查"],
+.calendarScreen [data-kind="多项"] {
+  --event-ink: #543681;
+  --event-surface: #f0e8ff;
+  --event-edge: #b098d3;
 }
 .monthGrid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 5px;
   text-align: center;
-  gap: 3px;
 }
-.monthGrid small {
-  color: #817d8a;
-  padding: 6px;
+.monthGrid > small {
+  padding: 8px 0;
+  color: #686875;
+  font-size: 13px;
 }
-.monthGrid button {
-  min-height: 44px;
-  padding: 6px;
-  border-radius: 10px;
+.calendarDay {
+  min-width: 0;
+  min-height: 58px;
+  display: grid;
+  grid-template-rows: 26px 17px;
+  align-content: center;
+  justify-items: center;
+  gap: 1px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  padding: 3px 0;
 }
-.monthGrid button span {
-  height: 6px;
-  display: flex;
-  justify-content: center;
-  gap: 3px;
+.dayNumber {
+  font-size: 18px;
+  line-height: 26px;
+  font-weight: 540;
+  font-variant-numeric: tabular-nums;
 }
-.monthGrid button i {
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
+.dayCaption {
+  font-size: 12px;
+  line-height: 17px;
+  font-weight: 660;
+  white-space: nowrap;
 }
-.monthGrid .today {
-  color: #6652cb;
-  font-weight: bold;
-  background: #f4f2fc;
+.calendarDay[data-kind] {
+  background: var(--event-surface);
+  color: var(--event-ink);
+  border-color: var(--event-edge);
 }
-.monthGrid .selectedDay {
+.calendarDay[data-kind] .dayNumber {
+  font-weight: 730;
+}
+.calendarDay[aria-current="date"] {
+  box-shadow: inset 0 0 0 2px #6253aa;
+}
+.calendarDay[aria-current="date"]:not([data-kind]):not([aria-pressed="true"]) {
+  color: #51458d;
+}
+.calendarDay[aria-pressed="true"] {
+  background: #383449;
   color: white;
-  background: var(--violet);
+  border-color: #383449;
+}
+.calendarDay[aria-current="date"][aria-pressed="true"] {
+  box-shadow:
+    inset 0 0 0 2px white,
+    inset 0 0 0 3px #383449;
+}
+@media (hover: hover) {
+  .calendarDay:not([data-kind]):not([aria-pressed="true"]):hover {
+    background: #f0f0f5;
+  }
+}
+.calendarAgenda {
+  margin-top: 22px;
+  border-top: 1px solid var(--line);
+  padding-top: 17px;
+}
+.calendarAgenda h3 {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 17px;
+  margin-bottom: 5px;
+}
+.calendarAgenda h3 small {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
 }
 .dateRow {
   display: flex;
   align-items: center;
   width: 100%;
   gap: 10px;
-  text-align: left;
   padding: 12px 1px;
+  text-align: left;
   border-bottom: 1px solid var(--line);
 }
-.dateRow span:not(.platformIcon) {
-  margin-left: auto;
-  font-size: 12px;
-  color: #777381;
+.dateRow:last-child {
+  border-bottom: 0;
+}
+.calendarService {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+.calendarService strong {
+  overflow-wrap: anywhere;
+  font-size: 16px;
+  line-height: 1.35;
+}
+.calendarService small {
+  font-size: 13px;
+  color: var(--event-ink);
+}
+.calendarAmount {
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+}
+.dateRow > svg {
+  flex: none;
+  color: #797784;
+}
+@media (max-width: 680px) {
+  .monthGrid {
+    gap: 4px 2px;
+  }
+  .calendarDay {
+    min-height: 51px;
+    border-radius: 9px;
+  }
 }
 .settings {
   display: grid;
@@ -1033,10 +1126,6 @@ dd {
 }
 .settingRow small {
   color: var(--muted);
-}
-.monthGrid .selectedDay {
-  color: white;
-  background: #3e3b51;
 }
 @media (max-width: 760px) {
   .dashGrid {

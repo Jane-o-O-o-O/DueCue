@@ -129,6 +129,12 @@ function download(e: Entry) {
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 45000);
 }
+const calendarLabels: Record<string, string> = {
+  自动续费: "续费",
+  会员到期: "到期",
+  账单还款: "还款",
+  提醒复查: "复查",
+};
 function Month({
   items,
   today,
@@ -144,10 +150,17 @@ function Month({
   const first = dateFrom(month + "-01"),
     offset = (first.getDay() + 6) % 7;
   const len = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
-  const monthItems = items.map((e) => atOrAfter(e, month + "-01"));
-  const matches = monthItems
-    .filter((e) => e.date && (day ? e.date === day : e.date.startsWith(month)))
+  const monthItems = items
+    .map((entry) => atOrAfter(entry, month + "-01"))
+    .filter((entry) => entry.date.startsWith(month + "-"))
     .sort((a, b) => a.date.localeCompare(b.date));
+  const byDate = new Map<string, Entry[]>();
+  for (const entry of monthItems) {
+    const group = byDate.get(entry.date);
+    if (group) group.push(entry);
+    else byDate.set(entry.date, [entry]);
+  }
+  const matches = day ? byDate.get(day) || [] : monthItems;
   const move = (n: number) => {
     setDirection(n);
     const m = dateFrom(month + "-01");
@@ -189,45 +202,70 @@ function Month({
           <i key={"blank" + i} />
         ))}
         {Array.from({ length: len }, (_, i) => {
-          const s = month + "-" + String(i + 1).padStart(2, "0");
+          const date = month + "-" + String(i + 1).padStart(2, "0");
+          const events = byDate.get(date) || [];
+          const type =
+            events.length === 1
+              ? events[0].kind
+              : events.length
+                ? "多项"
+                : undefined;
+          const isToday = date === today;
+          const label =
+            events.length > 1
+              ? events.length + "项"
+              : type
+                ? calendarLabels[type] || "事项"
+                : isToday
+                  ? "今天"
+                  : "";
           return (
             <button
-              className={
-                (day === s ? "selectedDay " : "") + (s === today ? "today" : "")
-              }
-              key={s}
-              aria-pressed={day === s}
-              onClick={() => daySet(day === s ? "" : s)}
+              type="button"
+              key={date}
+              className="calendarDay"
+              data-kind={type}
+              data-day={date}
+              aria-current={isToday ? "date" : undefined}
+              aria-pressed={day === date}
+              aria-controls="calendar-agenda"
+              aria-label={[
+                shortDate(date),
+                isToday && "今天",
+                events.length ? events.length + "项" : "无事项",
+                ...events.map((e) => e.name + " " + e.kind),
+              ]
+                .filter(Boolean)
+                .join("，")}
+              onClick={() => daySet(day === date ? "" : date)}
             >
-              {i + 1}
-              <span>
-                {monthItems
-                  .filter((e) => e.date === s)
-                  .slice(0, 3)
-                  .map((e) => (
-                    <i
-                      key={e.id}
-                      style={{
-                        background: (brands as any)[identifyBrand(e.name)]
-                          .color,
-                      }}
-                    />
-                  ))}
-              </span>
+              <span className="dayNumber">{i + 1}</span>
+              <span className="dayCaption">{label}</span>
             </button>
           );
         })}
       </div>
-      <div key={day || month} className="motionReveal">
-        <h3>{day ? shortDate(day) : "本月事项"}</h3>
+      <div
+        key={day || month}
+        id="calendar-agenda"
+        className="calendarAgenda motionReveal"
+      >
+        <h3>
+          {day ? shortDate(day) : "本月事项"}
+          {matches.length > 0 && <small>{matches.length} 项</small>}
+        </h3>
         {matches.length ? (
           matches.map((e) => (
             <button className="dateRow" key={e.id} onClick={() => select(e)}>
               <IconMark name={e.name} />
-              <strong>{e.name}</strong>
-              <span>
-                {shortDate(e.date)} · {money(e)}
+              <span className="calendarService">
+                <strong>{e.name}</strong>
+                <small data-kind={e.kind}>
+                  {e.kind}
+                  {!day && ` · ${shortDate(e.date)}`}
+                </small>
               </span>
+              <b className="calendarAmount">{money(e)}</b>
               <ChevronRight size={16} />
             </button>
           ))
