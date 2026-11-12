@@ -29,6 +29,13 @@ import {
 } from "@/lib/records";
 import { atOrAfter, occurrencesBetween } from "@/lib/recurrence";
 import Importer, { requestJSON } from "./importer";
+import {
+  DialogLayer,
+  type DialogControl,
+  useMovingItems,
+  releaseCard,
+  reducedMotion,
+} from "./motion";
 type Tab = "overview" | "calendar" | "list" | "settings";
 const tabs = [
   { key: "overview", name: "卡包", Icon: WalletCards },
@@ -132,7 +139,8 @@ function Month({
   select: (e: Entry) => void;
 }) {
   const [month, setMonth] = useState(today.slice(0, 7)),
-    [day, daySet] = useState("");
+    [day, daySet] = useState(""),
+    [direction, setDirection] = useState(1);
   const first = dateFrom(month + "-01"),
     offset = (first.getDay() + 6) % 7;
   const len = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
@@ -141,15 +149,19 @@ function Month({
     .filter((e) => e.date && (day ? e.date === day : e.date.startsWith(month)))
     .sort((a, b) => a.date.localeCompare(b.date));
   const move = (n: number) => {
+    setDirection(n);
     const m = dateFrom(month + "-01");
     m.setMonth(m.getMonth() + n);
     setMonth(iso(m).slice(0, 7));
     daySet("");
   };
   return (
-    <div className="section calendarScreen">
+    <div
+      className="section calendarScreen"
+      style={{ "--direction": direction } as React.CSSProperties}
+    >
       <div className="sectionTitle">
-        <h2>
+        <h2 key={month} className="monthLabel">
           {first.getFullYear()} 年 {first.getMonth() + 1} 月
         </h2>
         <span>
@@ -169,7 +181,7 @@ function Month({
           </button>
         </span>
       </div>
-      <div className="monthGrid">
+      <div key={month} className="monthGrid motionSlide">
         {"一二三四五六日".split("").map((x) => (
           <small key={x}>{x}</small>
         ))}
@@ -184,6 +196,7 @@ function Month({
                 (day === s ? "selectedDay " : "") + (s === today ? "today" : "")
               }
               key={s}
+              aria-pressed={day === s}
               onClick={() => daySet(day === s ? "" : s)}
             >
               {i + 1}
@@ -205,21 +218,23 @@ function Month({
           );
         })}
       </div>
-      <h3>{day ? shortDate(day) : "本月事项"}</h3>
-      {matches.length ? (
-        matches.map((e) => (
-          <button className="dateRow" key={e.id} onClick={() => select(e)}>
-            <IconMark name={e.name} />
-            <strong>{e.name}</strong>
-            <span>
-              {shortDate(e.date)} · {money(e)}
-            </span>
-            <ChevronRight size={16} />
-          </button>
-        ))
-      ) : (
-        <div className="empty">这段时间没有到期事项</div>
-      )}
+      <div key={day || month} className="motionReveal">
+        <h3>{day ? shortDate(day) : "本月事项"}</h3>
+        {matches.length ? (
+          matches.map((e) => (
+            <button className="dateRow" key={e.id} onClick={() => select(e)}>
+              <IconMark name={e.name} />
+              <strong>{e.name}</strong>
+              <span>
+                {shortDate(e.date)} · {money(e)}
+              </span>
+              <ChevronRight size={16} />
+            </button>
+          ))
+        ) : (
+          <div className="empty">这段时间没有到期事项</div>
+        )}
+      </div>
     </div>
   );
 }
@@ -242,7 +257,23 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
     [edit, E] = useState<Entry | undefined>(),
     [msg, M] = useState(""),
     [confirm, C] = useState(false),
-    [pending, P] = useState(false);
+    [pending, P] = useState(false),
+    [purchasing, setPurchasing] = useState(false),
+    [refreshing, setRefreshing] = useState(false),
+    [navDirection, setNavDirection] = useState(1);
+  const dialog = useRef<DialogControl>(null);
+  const opener = useRef<HTMLElement | null>(null);
+  const ghosts = useRef<HTMLDivElement>(null);
+  const searchInput = useRef<HTMLInputElement>(null);
+  const cardMotion = useMovingItems(index);
+  const listMotion = useMovingItems(JSON.stringify([filter, sortBy, q]));
+  const tabIndex = tabs.findIndex((t) => t.key === tab);
+  useEffect(() => {
+    if (search) searchInput.current?.focus({ preventScroll: true });
+  }, [search]);
+  function rememberOpener() {
+    if (!detail && !imp) opener.current = document.activeElement as HTMLElement;
+  }
   async function refresh() {
     try {
       const s = await requestJSON("/api/wallet");
@@ -275,26 +306,15 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
     const id = setTimeout(() => M(""), 3500);
     return () => clearTimeout(id);
   }, [msg]);
-  const close = () => {
-    if (pending) return;
+  function finishDismiss() {
     D(null);
     E(undefined);
     I(null);
     C(false);
-  };
-  useEffect(() => {
-    if (!detail && !imp) return;
-    const old = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    const handle = (e: KeyboardEvent) => {
-      if (e.key === "Escape") close();
-    };
-    window.addEventListener("keydown", handle);
-    return () => {
-      document.body.style.overflow = old;
-      window.removeEventListener("keydown", handle);
-    };
-  }, [detail, imp, pending]);
+  }
+  function close() {
+    dialog.current?.dismiss();
+  }
   const originals = demo ? examples(today) : live,
     items = originals.map((e) => atOrAfter(e, today)),
     ordered = [...items].sort((a, b) =>
@@ -311,9 +331,16 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
     deckSize = Math.min(4, items.length);
   const touchStart = useRef<{ x: number; y: number } | null>(null);
   const lastSwipe = useRef(0);
+  function settleDrag(deck: HTMLDivElement) {
+    delete deck.dataset.dragging;
+    deck.style.removeProperty("--drag-x");
+    deck.style.removeProperty("--drag-tilt");
+  }
   function moveCard(by: number) {
-    if (items.length > 1)
-      setIndex((previous) => (previous + by + items.length) % items.length);
+    if (items.length < 2) return;
+    cardMotion.capture();
+    releaseCard(cardMotion.group.current, ghosts.current, by);
+    setIndex((previous) => (previous + by + items.length) % items.length);
   }
   const rows = (
     sortBy
@@ -331,11 +358,13 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
     settings: "设置",
   };
   function nav(v: Tab) {
+    if (v === tab) return;
+    setNavDirection(tabs.findIndex((t) => t.key === v) > tabIndex ? 1 : -1);
     setTab(v);
     Q("");
     F("全部");
     S(false);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({ top: 0, behavior: "instant" });
   }
   function start(m = "text") {
     if (!member.active) {
@@ -343,6 +372,7 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
       M("试用已结束，请先开通使用权");
       return;
     }
+    rememberOpener();
     E(undefined);
     I(m);
   }
@@ -370,8 +400,7 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
         method: "DELETE",
       });
       setLive((old) => old.filter((e) => e.id !== detail.id));
-      D(null);
-      C(false);
+      close();
       setIndex(0);
       M("订阅已移除");
     } catch (e: any) {
@@ -381,6 +410,7 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
     }
   }
   const select = (r: Entry) => {
+      rememberOpener();
       C(false);
       D(r);
     },
@@ -404,31 +434,61 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
       <div className="listTools">
         <button
           className="iconBtn"
-          onClick={() => S(!search)}
+          aria-expanded={search}
+          onClick={() => {
+            S(!search);
+            if (search && q) {
+              listMotion.capture();
+              Q("");
+            }
+          }}
           aria-label="搜索订阅"
         >
           <Search size={17} />
         </button>
-        <button className="sortBtn" onClick={() => sort(!sortBy)}>
+        <button
+          className="sortBtn"
+          aria-pressed={sortBy}
+          onClick={() => {
+            listMotion.capture();
+            sort(!sortBy);
+          }}
+        >
           <ArrowDownUp size={14} />
           {sortBy ? "按名称" : "按日期"}
         </button>
       </div>
-      {search && (
-        <input
-          className="search"
-          autoFocus
-          placeholder="搜索订阅名称"
-          value={q}
-          onChange={(e) => Q(e.target.value)}
-        />
-      )}
+      <div
+        className="fold"
+        data-open={search}
+        inert={!search}
+        aria-hidden={!search}
+      >
+        <div>
+          <input
+            className="search"
+            ref={searchInput}
+            placeholder="搜索订阅名称"
+            value={q}
+            onChange={(e) => {
+              listMotion.capture();
+              Q(e.target.value);
+            }}
+          />
+        </div>
+      </div>
       <div className="filters">
         {["全部", "自动续费", "会员到期", "账单还款", "提醒复查"].map((f) => (
           <button
             className={filter === f ? "on" : ""}
             key={f}
-            onClick={() => F(f)}
+            aria-pressed={filter === f}
+            onClick={() => {
+              if (filter !== f) {
+                listMotion.capture();
+                F(f);
+              }
+            }}
           >
             {f}
           </button>
@@ -440,33 +500,42 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
         <span>金额</span>
         <span />
       </div>
-      {rows.length ? (
-        rows.map((r) => (
-          <button key={r.id} className="tableRow" onClick={() => select(r)}>
-            <span className="service">
-              <IconMark name={r.name} />
-              <span>
-                <b>{r.name}</b>
-                <small>
-                  {r.cycle} · {r.kind}
-                </small>
+      <div ref={listMotion.group}>
+        {rows.length ? (
+          rows.map((r) => (
+            <button
+              key={r.id}
+              className="tableRow"
+              data-motion-id={r.id}
+              onClick={() => select(r)}
+            >
+              <span className="service">
+                <IconMark name={r.name} />
+                <span>
+                  <b>{r.name}</b>
+                  <small>
+                    {r.cycle} · {r.kind}
+                  </small>
+                </span>
               </span>
-            </span>
-            <span className="rowDate">{shortDate(r.date)}</span>
-            <b className="rowAmount">{money(r)}</b>
-            <ChevronRight size={15} />
-          </button>
-        ))
-      ) : (
-        <div className="empty">
-          {items.length ? "没有匹配的订阅" : "暂无订阅"}
-        </div>
-      )}
+              <span className="rowDate">{shortDate(r.date)}</span>
+              <b className="rowAmount">{money(r)}</b>
+              <ChevronRight size={15} />
+            </button>
+          ))
+        ) : (
+          <div className="empty">
+            {items.length ? "没有匹配的订阅" : "暂无订阅"}
+          </div>
+        )}
+      </div>
     </section>
   );
   const navigation = (mode: "desktop" | "mobile") => (
     <nav
       className={mode === "desktop" ? "desktopNav" : "mobileNav"}
+      style={{ "--choice": tabIndex } as React.CSSProperties}
+      inert={!!(detail || imp)}
       aria-label="主导航"
     >
       {tabs.map(({ key, name, Icon }) => (
@@ -490,9 +559,12 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
           {navigation("desktop")}
         </div>
       </header>
-      <main>
+      <main
+        inert={!!(detail || imp)}
+        style={{ "--direction": navDirection } as React.CSSProperties}
+      >
         <header className="pageHeader">
-          <div className="pageTitle">
+          <div className="pageTitle motionReveal" key={tab}>
             <h1>{pageTitles[tab]}</h1>
             {demo && tab !== "settings" && (
               <span className="demoLabel">示例</span>
@@ -512,384 +584,466 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
         {dbError && (
           <div className="warning">
             个人账本暂未载入。
-            <button className="textBtn" onClick={() => refresh()}>
-              重新加载
+            <button
+              className="textBtn"
+              disabled={refreshing}
+              onClick={async () => {
+                setRefreshing(true);
+                try {
+                  await refresh();
+                } finally {
+                  setRefreshing(false);
+                }
+              }}
+            >
+              {refreshing ? "加载中…" : "重新加载"}
             </button>
           </div>
         )}
-        {tab === "overview" && (
-          <>
-            <div className="dashGrid">
-              <section className="walletPanel" aria-label="订阅卡片">
-                {curr ? (
-                  <>
-                    <div
-                      className="deck"
-                      style={
-                        { "--deck-count": deckSize } as React.CSSProperties
-                      }
-                      onTouchStart={(e) => {
-                        const point = e.touches[0];
-                        touchStart.current = {
-                          x: point.clientX,
-                          y: point.clientY,
-                        };
-                      }}
-                      onTouchCancel={() => {
-                        touchStart.current = null;
-                      }}
-                      onTouchEnd={(e) => {
-                        const start = touchStart.current;
-                        touchStart.current = null;
-                        if (!start || items.length < 2) return;
-                        const dx = e.changedTouches[0].clientX - start.x,
-                          dy = e.changedTouches[0].clientY - start.y;
-                        if (
-                          Math.abs(dx) > 40 &&
-                          Math.abs(dx) > 1.4 * Math.abs(dy)
-                        ) {
-                          lastSwipe.current = Date.now();
-                          moveCard(dx < 0 ? 1 : -1);
+        <div key={tab} className="pageStage motionSlide">
+          {tab === "overview" && (
+            <>
+              <div className="dashGrid">
+                <section className="walletPanel" aria-label="订阅卡片">
+                  {curr ? (
+                    <>
+                      <div
+                        className="deck"
+                        ref={cardMotion.group}
+                        style={
+                          { "--deck-count": deckSize } as React.CSSProperties
                         }
-                      }}
-                    >
-                      {Array.from({ length: deckSize }, (_, j) => {
-                        const n = deckSize - 1 - j;
-                        const r = items[(index + n) % items.length];
-                        const slug = identifyBrand(r.name);
-                        const b = (brands as any)[slug];
-                        return (
-                          <button
-                            key={r.id}
-                            className={"deckCard" + (n ? " behind" : " front")}
-                            style={
-                              {
-                                "--level": n,
-                                "--slot": j,
-                                "--card": b.dark,
-                                "--tint": b.light,
-                              } as React.CSSProperties
-                            }
-                            onClick={() => {
-                              if (Date.now() - lastSwipe.current < 450) return;
-                              if (n) moveCard(n);
-                              else select(r);
-                            }}
-                            aria-label={
-                              r.name + (n ? "，切换到此卡" : "，打开详情")
-                            }
-                          >
-                            <span className="deckName">
-                              <IconMark name={r.name} />
-                              <b>{r.name}</b>
-                            </span>
-                            {n === 0 && (
-                              <>
-                                <span className="deckChip">{r.cycle}</span>
-                                <CardArt slug={slug} />
-                                <span className="heroFoot">
-                                  <span className="heroAmount">
-                                    <small>{r.kind}</small>
-                                    <strong>{money(r)}</strong>
+                        onTouchStart={(e) => {
+                          const point = e.touches[0];
+                          touchStart.current = {
+                            x: point.clientX,
+                            y: point.clientY,
+                          };
+                        }}
+                        onTouchMove={(e) => {
+                          const start = touchStart.current;
+                          if (
+                            !start ||
+                            items.length < 2 ||
+                            e.touches.length !== 1 ||
+                            reducedMotion()
+                          )
+                            return;
+                          const dx = e.touches[0].clientX - start.x,
+                            dy = e.touches[0].clientY - start.y;
+                          if (
+                            Math.abs(dy) > Math.abs(dx) &&
+                            !e.currentTarget.dataset.dragging
+                          )
+                            return;
+                          const travel = Math.max(-48, Math.min(48, dx * 0.32));
+                          e.currentTarget.dataset.dragging = "true";
+                          e.currentTarget.style.setProperty(
+                            "--drag-x",
+                            travel + "px",
+                          );
+                          e.currentTarget.style.setProperty(
+                            "--drag-tilt",
+                            travel * 0.055 + "deg",
+                          );
+                        }}
+                        onTouchCancel={(e) => {
+                          settleDrag(e.currentTarget);
+                          touchStart.current = null;
+                        }}
+                        onTouchEnd={(e) => {
+                          const start = touchStart.current;
+                          touchStart.current = null;
+                          if (!start || items.length < 2) return;
+                          const dx = e.changedTouches[0].clientX - start.x,
+                            dy = e.changedTouches[0].clientY - start.y;
+                          if (
+                            Math.abs(dx) > 40 &&
+                            Math.abs(dx) > 1.4 * Math.abs(dy)
+                          ) {
+                            lastSwipe.current = Date.now();
+                            moveCard(dx < 0 ? 1 : -1);
+                          }
+                          settleDrag(e.currentTarget);
+                        }}
+                      >
+                        {Array.from({ length: deckSize }, (_, j) => {
+                          const n = deckSize - 1 - j;
+                          const r = items[(index + n) % items.length];
+                          const slug = identifyBrand(r.name);
+                          const b = (brands as any)[slug];
+                          return (
+                            <button
+                              key={r.id}
+                              data-motion-id={r.id}
+                              className={
+                                "deckCard" + (n ? " behind" : " front")
+                              }
+                              style={
+                                {
+                                  "--level": n,
+                                  "--slot": j,
+                                  "--card": b.dark,
+                                  "--tint": b.light,
+                                } as React.CSSProperties
+                              }
+                              onClick={() => {
+                                if (Date.now() - lastSwipe.current < 450)
+                                  return;
+                                if (n) moveCard(n);
+                                else select(r);
+                              }}
+                              aria-label={
+                                r.name + (n ? "，切换到此卡" : "，打开详情")
+                              }
+                            >
+                              <span className="deckName">
+                                <IconMark name={r.name} />
+                                <b>{r.name}</b>
+                              </span>
+                              {n === 0 && (
+                                <>
+                                  <span className="deckChip">{r.cycle}</span>
+                                  <CardArt slug={slug} />
+                                  <span className="heroFoot">
+                                    <span className="heroAmount">
+                                      <small>{r.kind}</small>
+                                      <strong>{money(r)}</strong>
+                                    </span>
+                                    <span className="heroDate">
+                                      <small>{due(r.date, today)}</small>
+                                      <b>{shortDate(r.date)}</b>
+                                    </span>
                                   </span>
-                                  <span className="heroDate">
-                                    <small>{due(r.date, today)}</small>
-                                    <b>{shortDate(r.date)}</b>
-                                  </span>
-                                </span>
-                              </>
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    {items.length > 1 && (
-                      <div className="deckNav">
-                        <button
-                          aria-label="上一张卡"
-                          onClick={() => moveCard(-1)}
-                        >
-                          <ChevronLeft size={17} />
-                        </button>
-                        <span className="pager" aria-live="polite">
-                          {(index % items.length) + 1}
-                          <i>/</i>
-                          {items.length}
-                        </span>
-                        <button
-                          aria-label="下一张卡"
-                          onClick={() => moveCard(1)}
-                        >
-                          <ChevronRight size={17} />
-                        </button>
+                                </>
+                              )}
+                            </button>
+                          );
+                        })}
+                        <div
+                          ref={ghosts}
+                          className="cardGhosts"
+                          inert
+                          aria-hidden="true"
+                        />
                       </div>
-                    )}
-                  </>
-                ) : (
-                  <button className="drop" onClick={() => start("manual")}>
-                    <Plus />
-                    添加第一张订阅卡
-                  </button>
-                )}
-              </section>
-              <div className="overviewSide">
-                <section className="forecast" aria-label="未来三十天续费">
-                  <span>
-                    30 天内预计续费
-                    {expected.some((e) => e.currency !== "CNY") && (
-                      <small>仅计人民币</small>
-                    )}
-                  </span>
-                  <strong>¥{total.toFixed(2)}</strong>
-                  {total > 0 && (
-                    <span className="spendBar" aria-hidden="true">
-                      {expected
-                        .filter(
-                          (e) => e.currency === "CNY" && Number(e.amount) > 0,
-                        )
-                        .map((e) => (
-                          <i
-                            key={e.id + e.date}
-                            style={{
-                              flexGrow: Number(e.amount),
-                              background: (brands as any)[identifyBrand(e.name)]
-                                .color,
-                            }}
-                          />
-                        ))}
-                    </span>
+                      {items.length > 1 && (
+                        <div className="deckNav">
+                          <button
+                            aria-label="上一张卡"
+                            onClick={() => moveCard(-1)}
+                          >
+                            <ChevronLeft size={17} />
+                          </button>
+                          <span
+                            className="pager motionReveal"
+                            key={index}
+                            aria-live="polite"
+                          >
+                            {(index % items.length) + 1}
+                            <i>/</i>
+                            {items.length}
+                          </span>
+                          <button
+                            aria-label="下一张卡"
+                            onClick={() => moveCard(1)}
+                          >
+                            <ChevronRight size={17} />
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <button className="drop" onClick={() => start("manual")}>
+                      <Plus />
+                      添加第一张订阅卡
+                    </button>
                   )}
                 </section>
-                <section className="upcoming">
-                  {heading(
-                    "近期事项",
-                    <button
-                      className="iconBtn"
-                      aria-label="查看日历"
-                      onClick={() => nav("calendar")}
-                    >
-                      <CalendarDays size={18} />
-                    </button>,
-                  )}
-                  <div className="agenda">
-                    {upcoming.slice(0, 4).map((r) => (
-                      <button key={r.id} onClick={() => select(r)}>
-                        <span className="dateStamp">
-                          <small>{Number(r.date.slice(5, 7))}月</small>
-                          <b>{r.date.slice(8)}</b>
-                        </span>
-                        <span className="agendaName">
-                          <strong>{r.name}</strong>
-                          <small>
+                <div className="overviewSide">
+                  <section className="forecast" aria-label="未来三十天续费">
+                    <span>
+                      30 天内预计续费
+                      {expected.some((e) => e.currency !== "CNY") && (
+                        <small>仅计人民币</small>
+                      )}
+                    </span>
+                    <strong>¥{total.toFixed(2)}</strong>
+                    {total > 0 && (
+                      <span className="spendBar" aria-hidden="true">
+                        {expected
+                          .filter(
+                            (e) => e.currency === "CNY" && Number(e.amount) > 0,
+                          )
+                          .map((e) => (
                             <i
+                              key={e.id + e.date}
                               style={{
+                                flexGrow: Number(e.amount),
                                 background: (brands as any)[
-                                  identifyBrand(r.name)
+                                  identifyBrand(e.name)
                                 ].color,
                               }}
                             />
-                            {r.kind} · {due(r.date, today)}
-                          </small>
-                        </span>
-                        <b>{money(r)}</b>
-                      </button>
-                    ))}
-                    {!upcoming.length && (
-                      <div className="empty">暂无近期事项</div>
+                          ))}
+                      </span>
                     )}
-                  </div>
-                </section>
-              </div>
-            </div>
-          </>
-        )}
-        {tab === "list" && list()}
-        {tab === "calendar" && (
-          <Month items={originals} today={today} select={select} />
-        )}
-        {tab === "settings" && (
-          <div className="settings">
-            <section className="section">
-              <div className="memberHero">
-                <SquareStack size={28} />
-                <h2>{status}</h2>
-                <p>
-                  {member.started
-                    ? "有效至 " + new Date(member.end).toLocaleString("zh-CN")
-                    : "首次保存或成功识别后起算，含截图和文字导入。"}
-                </p>
-              </div>
-              {plan?.ready ? (
-                <button
-                  className="primary"
-                  onClick={async () => {
-                    try {
-                      const r = await requestJSON("/api/checkout", {
-                        method: "POST",
-                      });
-                      location.assign(r.url);
-                    } catch (e: any) {
-                      M(e.message);
-                    }
-                  }}
-                >
-                  支付宝购买 {plan.days} 天 · ¥{plan.price}
-                </button>
-              ) : (
-                <p className="hint">付费方案待开放，到期可主动续期。</p>
-              )}
-            </section>
-            <section className="section">
-              <div className="settingRow">
-                <span>
-                  <b>示例账本</b>
-                </span>
-                <button
-                  className="soft"
-                  onClick={() => {
-                    localStorage.setItem(
-                      "youqi:hide-demo",
-                      demo ? "yes" : "no",
-                    );
-                    setDemo(!demo);
-                    setIndex(0);
-                    nav("overview");
-                  }}
-                >
-                  {demo ? "返回我的卡包" : "查看示例"}
-                </button>
-              </div>
-              <div className="settingRow">
-                <span>
-                  <b>截图与文字识别</b>
-                  <small>gpt-6.2-sol</small>
-                </span>
-                <small>{ai ? "可用" : "待开通"}</small>
-              </div>
-              <div className="settingRow">
-                <span>
-                  <b>iPhone 日历提醒</b>
-                  <small>打开订阅，点「加入日历」。</small>
-                </span>
-                <CalendarPlus size={18} />
-              </div>
-            </section>
-          </div>
-        )}
-      </main>
-      {navigation("mobile")}
-      {detail && !imp && (
-        <div
-          className="modalLayer"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) close();
-          }}
-        >
-          <section
-            className="sheet"
-            role="dialog"
-            aria-modal="true"
-            aria-label="订阅详情"
-          >
-            <div className="sheetHead">
-              <div>
-                <IconMark name={detail.name} />
-                <h2>{detail.name}</h2>
-              </div>
-              <button className="iconBtn" aria-label="关闭" onClick={close}>
-                <X size={19} />
-              </button>
-            </div>
-            <div
-              className="detailTop"
-              style={
-                {
-                  "--accent": (brands as any)[identifyBrand(detail.name)].dark,
-                } as React.CSSProperties
-              }
-            >
-              <small>{detail.kind}</small>
-              <strong>{money(detail)}</strong>
-            </div>
-            <dl>
-              {[
-                ["下次日期", shortDate(detail.date)],
-                ["周期", detail.cycle],
-                [
-                  "日历提醒",
-                  detail.remind ? "提前 " + detail.remind + " 天" : "当天",
-                ],
-                ...(detail.note ? [["备注", detail.note]] : []),
-              ].map(([k, v]) => (
-                <div key={k}>
-                  <dt>{k}</dt>
-                  <dd>{v}</dd>
+                  </section>
+                  <section className="upcoming">
+                    {heading(
+                      "近期事项",
+                      <button
+                        className="iconBtn"
+                        aria-label="查看日历"
+                        onClick={() => nav("calendar")}
+                      >
+                        <CalendarDays size={18} />
+                      </button>,
+                    )}
+                    <div className="agenda">
+                      {upcoming.slice(0, 4).map((r) => (
+                        <button key={r.id} onClick={() => select(r)}>
+                          <span className="dateStamp">
+                            <small>{Number(r.date.slice(5, 7))}月</small>
+                            <b>{r.date.slice(8)}</b>
+                          </span>
+                          <span className="agendaName">
+                            <strong>{r.name}</strong>
+                            <small>
+                              <i
+                                style={{
+                                  background: (brands as any)[
+                                    identifyBrand(r.name)
+                                  ].color,
+                                }}
+                              />
+                              {r.kind} · {due(r.date, today)}
+                            </small>
+                          </span>
+                          <b>{money(r)}</b>
+                        </button>
+                      ))}
+                      {!upcoming.length && (
+                        <div className="empty">暂无近期事项</div>
+                      )}
+                    </div>
+                  </section>
                 </div>
-              ))}
-            </dl>
-            {demo ? (
-              <button
-                className="primary wide"
-                onClick={() => {
-                  D(null);
-                  start("manual");
-                }}
-              >
-                <Plus size={16} />
-                添加我的订阅
-              </button>
-            ) : (
-              <>
-                <div className="actions">
+              </div>
+            </>
+          )}
+          {tab === "list" && list()}
+          {tab === "calendar" && (
+            <Month items={originals} today={today} select={select} />
+          )}
+          {tab === "settings" && (
+            <div className="settings">
+              <section className="section">
+                <div className="memberHero">
+                  <SquareStack size={28} />
+                  <h2>{status}</h2>
+                  <p>
+                    {member.started
+                      ? "有效至 " + new Date(member.end).toLocaleString("zh-CN")
+                      : "首次保存或成功识别后起算，含截图和文字导入。"}
+                  </p>
+                </div>
+                {plan?.ready ? (
+                  <button
+                    className="primary"
+                    disabled={purchasing}
+                    aria-busy={purchasing}
+                    onClick={async () => {
+                      setPurchasing(true);
+                      try {
+                        const r = await requestJSON("/api/checkout", {
+                          method: "POST",
+                        });
+                        location.assign(r.url);
+                      } catch (e: any) {
+                        setPurchasing(false);
+                        M(e.message);
+                      }
+                    }}
+                  >
+                    {purchasing
+                      ? "正在打开支付宝…"
+                      : `支付宝购买 ${plan.days} 天 · ¥${plan.price}`}
+                  </button>
+                ) : (
+                  <p className="hint">付费方案待开放，到期可主动续期。</p>
+                )}
+              </section>
+              <section className="section">
+                <div className="settingRow">
+                  <span>
+                    <b>示例账本</b>
+                  </span>
                   <button
                     className="soft"
                     onClick={() => {
-                      if (!member.active) {
-                        close();
-                        nav("settings");
-                        return;
-                      }
-                      E(live.find((r) => r.id === detail.id) || detail);
-                      I("manual");
+                      localStorage.setItem(
+                        "youqi:hide-demo",
+                        demo ? "yes" : "no",
+                      );
+                      setDemo(!demo);
+                      setIndex(0);
+                      nav("overview");
                     }}
                   >
-                    <PenLine size={16} />
-                    编辑
-                  </button>
-                  <button
-                    className="primary"
-                    disabled={!detail.date}
-                    onClick={() =>
-                      download(live.find((r) => r.id === detail.id) || detail)
-                    }
-                  >
-                    <Download size={16} />
-                    加入日历
+                    {demo ? "返回我的卡包" : "查看示例"}
                   </button>
                 </div>
-                <button
-                  disabled={pending}
-                  className="deleteBtn"
-                  onClick={() => (confirm ? remove() : C(true))}
-                >
-                  {confirm ? "确认删除这条订阅？" : "删除订阅"}
-                </button>
-              </>
-            )}
-          </section>
+                <div className="settingRow">
+                  <span>
+                    <b>截图与文字识别</b>
+                    <small>gpt-6.2-sol</small>
+                  </span>
+                  <small>{ai ? "可用" : "待开通"}</small>
+                </div>
+                <div className="settingRow">
+                  <span>
+                    <b>iPhone 日历提醒</b>
+                    <small>打开订阅，点「加入日历」。</small>
+                  </span>
+                  <CalendarPlus size={18} />
+                </div>
+              </section>
+            </div>
+          )}
         </div>
-      )}
-      {imp && (
-        <Importer
-          edit={edit}
-          initialMode={imp}
-          ai={ai}
-          save={save}
-          close={close}
-        />
+      </main>
+      {navigation("mobile")}
+      {(detail || imp) && (
+        <DialogLayer
+          controller={dialog}
+          onDismiss={finishDismiss}
+          returnFocus={opener}
+        >
+          {detail && !imp && (
+            <section
+              className="sheet"
+              aria-busy={pending}
+              role="dialog"
+              aria-modal="true"
+              aria-label="订阅详情"
+            >
+              <div className="sheetHead">
+                <div>
+                  <IconMark name={detail.name} />
+                  <h2>{detail.name}</h2>
+                </div>
+                <button
+                  className="iconBtn"
+                  aria-label="关闭"
+                  disabled={pending}
+                  onClick={close}
+                >
+                  <X size={19} />
+                </button>
+              </div>
+              <div
+                className="detailTop"
+                style={
+                  {
+                    "--accent": (brands as any)[identifyBrand(detail.name)]
+                      .dark,
+                  } as React.CSSProperties
+                }
+              >
+                <small>{detail.kind}</small>
+                <strong>{money(detail)}</strong>
+              </div>
+              <dl>
+                {[
+                  ["下次日期", shortDate(detail.date)],
+                  ["周期", detail.cycle],
+                  [
+                    "日历提醒",
+                    detail.remind ? "提前 " + detail.remind + " 天" : "当天",
+                  ],
+                  ...(detail.note ? [["备注", detail.note]] : []),
+                ].map(([k, v]) => (
+                  <div key={k}>
+                    <dt>{k}</dt>
+                    <dd>{v}</dd>
+                  </div>
+                ))}
+              </dl>
+              {demo ? (
+                <button
+                  className="primary wide"
+                  onClick={() => {
+                    D(null);
+                    start("manual");
+                  }}
+                >
+                  <Plus size={16} />
+                  添加我的订阅
+                </button>
+              ) : (
+                <>
+                  <div className="actions">
+                    <button
+                      className="soft"
+                      onClick={() => {
+                        if (!member.active) {
+                          close();
+                          nav("settings");
+                          return;
+                        }
+                        E(live.find((r) => r.id === detail.id) || detail);
+                        I("manual");
+                      }}
+                    >
+                      <PenLine size={16} />
+                      编辑
+                    </button>
+                    <button
+                      className="primary"
+                      disabled={!detail.date}
+                      onClick={() => {
+                        download(
+                          live.find((r) => r.id === detail.id) || detail,
+                        );
+                        M("已生成日历文件");
+                      }}
+                    >
+                      <Download size={16} />
+                      加入日历
+                    </button>
+                  </div>
+                  <button
+                    disabled={pending}
+                    className="deleteBtn"
+                    data-confirm={confirm}
+                    onClick={() => (confirm ? remove() : C(true))}
+                  >
+                    <span key={String(confirm)} className="actionLabel">
+                      {pending
+                        ? "正在删除…"
+                        : confirm
+                          ? "确认删除这条订阅？"
+                          : "删除订阅"}
+                    </span>
+                  </button>
+                </>
+              )}
+            </section>
+          )}
+          {imp && (
+            <Importer
+              edit={edit}
+              initialMode={imp}
+              ai={ai}
+              save={save}
+              close={close}
+            />
+          )}
+        </DialogLayer>
       )}
       {msg && (
-        <div className="toast" role="status">
+        <div key={msg} className="toast" role="status">
           {msg}
         </div>
       )}
