@@ -2,7 +2,8 @@
 import { useState, useRef, useLayoutEffect, useEffect } from "react";
 import { parseDeviceText } from "@/lib/device-import";
 import { reducedMotion } from "./motion";
-import { badge, identifyBrand } from "../public/brands.js";
+import { identifyBrand } from "../public/brands.js";
+import { BrandIcon } from "./brand-icon";
 import {
   AlignLeft,
   ImagePlus,
@@ -453,13 +454,10 @@ export default function Importer({
               <label className="full">
                 服务名称
                 <span className="nameEntry">
-                  <span
+                  <BrandIcon
                     key={identifyBrand(d.name)}
-                    className="platformIcon motionReveal"
-                    aria-hidden="true"
-                    dangerouslySetInnerHTML={{
-                      __html: badge(identifyBrand(d.name)),
-                    }}
+                    name={d.name}
+                    className="motionReveal"
                   />
                   <input
                     autoFocus

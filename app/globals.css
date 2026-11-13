@@ -255,19 +255,44 @@ h1 {
   font-weight: 650;
   letter-spacing: -0.025em;
 }
-.platformIcon,
-.platformIcon svg {
+.platformIcon {
   display: inline-flex;
   height: 34px;
   width: 34px;
   flex: none;
   vertical-align: middle;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 23%;
+  background: white;
+}
+.platformIcon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+.platformIcon.emblem img {
+  width: 82%;
+  height: 82%;
+}
+.platformIcon.generic {
+  background: #f2eeff;
+  color: #7462b3;
+}
+.platformIcon.genericPhone {
+  background: #ecf7fd;
+  color: #237dab;
+}
+.platformIcon svg {
+  width: 66%;
+  height: 66%;
 }
 .behind .deckName b {
   font-size: 16px;
 }
-.behind .platformIcon,
-.behind .platformIcon svg {
+.behind .platformIcon {
   height: 27px;
   width: 27px;
 }
@@ -295,12 +320,13 @@ h1 {
   opacity: 0.41;
   stroke-width: 0.95;
 }
-.cardArt.carrierArt {
-  opacity: 0.18;
-  top: -7%;
-  right: -6%;
-  width: 61%;
-  height: 110%;
+.cardArt.officialArt {
+  object-fit: contain;
+  opacity: 0.33;
+  top: 12%;
+  right: 3%;
+  width: 47%;
+  height: 70%;
 }
 .heroFoot {
   position: relative;
@@ -1084,10 +1110,6 @@ dd {
   width: 24px;
   height: 24px;
 }
-.nameEntry .platformIcon svg {
-  width: 24px;
-  height: 24px;
-}
 .nameEntry input {
   padding-left: 44px;
 }
@@ -1445,8 +1467,7 @@ dd {
   pointer-events: none;
   background: linear-gradient(0deg, #10283d35, transparent 54%);
 }
-.walletHome .front .platformIcon,
-.walletHome .front .platformIcon svg {
+.walletHome .front .platformIcon {
   width: 38px;
   height: 38px;
 }
@@ -1466,14 +1487,7 @@ dd {
   letter-spacing: -0.045em;
   font-weight: 550;
 }
-.cloudArt {
-  opacity: 0.94;
-  right: -3%;
-  top: -10%;
-  width: 64%;
-  height: 118%;
-  pointer-events: none;
-}
+
 .walletHome .deckChip {
   top: 23px;
 }
@@ -1543,8 +1557,7 @@ dd {
   .walletHome .deckCard.behind {
     padding-inline: 15px;
   }
-  .walletHome .behind .platformIcon,
-  .walletHome .behind .platformIcon svg {
+  .walletHome .behind .platformIcon {
     width: 28px;
     height: 28px;
   }

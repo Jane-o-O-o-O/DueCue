@@ -17,12 +17,8 @@ import {
   PenLine,
   CalendarPlus,
 } from "lucide-react";
-import {
-  brands,
-  identifyBrand,
-  badge,
-  carrierArtwork,
-} from "../public/brands.js";
+import { brands, identifyBrand } from "../public/brands.js";
+import { BrandIcon, emblemArtwork } from "./brand-icon";
 import {
   examples,
   iso,
@@ -63,15 +59,6 @@ function due(s: string, t: string) {
         ? "已过 " + -n + " 天"
         : n + " 天后";
 }
-function IconMark({ name }: { name: string }) {
-  return (
-    <span
-      className="platformIcon"
-      aria-hidden="true"
-      dangerouslySetInnerHTML={{ __html: badge(identifyBrand(name)) }}
-    />
-  );
-}
 function Brand() {
   return (
     <div className="brand">
@@ -83,52 +70,15 @@ function Brand() {
   );
 }
 function CardArt({ slug }: { slug: string }) {
-  if (slug === "icloud") {
-    const cloud =
-      "M47 141c-20 0-34-12-34-30 0-16 12-29 28-31 4-20 20-33 39-33 16 0 30 9 37 23 4-2 8-3 13-3 16 0 28 12 30 27 13 2 22 11 22 24 0 14-11 23-27 23Z";
-    return (
-      <svg
-        className="cardArt cloudArt"
-        viewBox="0 0 200 180"
-        aria-hidden="true"
-      >
-        <g transform="rotate(-15 100 90)">
-          {[11, 7, 3, 0].map((offset, i) => (
-            <path
-              key={offset}
-              d={cloud}
-              transform={`translate(${offset},${offset})`}
-              fill={i === 3 ? "#d4eeff" : "#92d4ff"}
-              fillOpacity={i === 3 ? 0.19 : 0.09}
-              stroke="#f4fcff"
-              strokeOpacity={i === 3 ? 0.75 : 0.32}
-              strokeWidth={i === 3 ? 1.4 : 1}
-            />
-          ))}
-        </g>
-      </svg>
-    );
-  }
-  const emblem = carrierArtwork(slug);
+  const emblem = emblemArtwork(slug);
   if (emblem) {
     return (
-      <svg
+      <img
+        className="cardArt officialArt"
+        src={emblem}
+        alt=""
         aria-hidden="true"
-        viewBox="0 0 36 36"
-        className="cardArt carrierArt"
-      >
-        {emblem.map(({ d, width }) => (
-          <path
-            key={d}
-            d={d}
-            fill={width ? "none" : "currentColor"}
-            stroke={width ? "currentColor" : "none"}
-            strokeWidth={width}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        ))}
-      </svg>
+      />
     );
   }
   const isVideo = [
@@ -312,7 +262,7 @@ function Month({
         {matches.length ? (
           matches.map((e) => (
             <button className="dateRow" key={e.id} onClick={() => select(e)}>
-              <IconMark name={e.name} />
+              <BrandIcon name={e.name} />
               <span className="calendarService">
                 <strong>{e.name}</strong>
                 <small data-kind={e.kind}>
@@ -605,7 +555,7 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
               onClick={() => select(r)}
             >
               <span className="service">
-                <IconMark name={r.name} />
+                <BrandIcon name={r.name} />
                 <span>
                   <b>{r.name}</b>
                   <small>
@@ -829,7 +779,7 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
                                 }
                               >
                                 <span className="deckName">
-                                  <IconMark name={r.name} />
+                                  <BrandIcon name={r.name} />
                                   <b>{r.name}</b>
                                 </span>
                                 {n > 0 && (
@@ -1083,7 +1033,7 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
             >
               <div className="sheetHead">
                 <div>
-                  <IconMark name={detail.name} />
+                  <BrandIcon name={detail.name} />
                   <h2>{detail.name}</h2>
                 </div>
                 <button
