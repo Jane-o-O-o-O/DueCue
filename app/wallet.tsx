@@ -17,6 +17,7 @@ import {
   PenLine,
   CalendarPlus,
 } from "lucide-react";
+import { catalog } from "../public/catalog-data.js";
 import { brands, identifyBrand } from "../public/brands.js";
 import { BrandIcon, emblemArtwork } from "./brand-icon";
 import {
@@ -296,6 +297,7 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
     [search, S] = useState(false),
     [sortBy, sort] = useState(false),
     [imp, I] = useState<string | null>(null),
+    [catalogBrand, setCatalogBrand] = useState(""),
     [detail, D] = useState<Entry | null>(null),
     [edit, E] = useState<Entry | undefined>(),
     [msg, M] = useState(""),
@@ -328,6 +330,25 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
         !s.entries.length && localStorage.getItem("youqi:hide-demo") !== "yes",
       );
       setDbError("");
+      const url = new URL(window.location.href);
+      if (url.searchParams.has("brand")) {
+        const chosen = catalog.find(
+          (item) => item.slug === url.searchParams.get("brand"),
+        );
+        url.searchParams.delete("brand");
+        window.history.replaceState(
+          window.history.state,
+          "",
+          url.pathname + url.search + url.hash,
+        );
+        if (chosen && s.member.active) {
+          setCatalogBrand(chosen.slug);
+          I("manual");
+        } else if (chosen) {
+          setTab("settings");
+          M("试用已结束，请先开通使用权");
+        }
+      }
     } catch (e: any) {
       setDbError(e.message);
     }
@@ -350,6 +371,7 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
     return () => clearTimeout(id);
   }, [msg]);
   function finishDismiss() {
+    setCatalogBrand("");
     D(null);
     E(undefined);
     I(null);
@@ -978,6 +1000,13 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
                 )}
               </section>
               <section className="section">
+                <a className="settingRow catalogEntry" href="/brands">
+                  <span>
+                    <b>国内会员目录</b>
+                    <small>{catalog.length} 项会员与套餐</small>
+                  </span>
+                  <ChevronRight size={18} aria-hidden="true" />
+                </a>
                 <div className="settingRow">
                   <span>
                     <b>示例账本</b>
@@ -1138,6 +1167,7 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
             <Importer
               edit={edit}
               initialMode={imp}
+              catalogBrand={catalogBrand}
               ai={ai}
               onRecognized={setMember}
               save={save}

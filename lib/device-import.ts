@@ -162,6 +162,7 @@ export function parseDeviceText(raw: string, base: string, confidence = 100) {
     .split(/\n+|[;；]|[,，](?=[^\d])/)
     .map((s) => s.trim())
     .filter(Boolean)) {
+    if (/^(?:附赠|赠送|权益包含|包含权益|免费领取)/.test(part)) continue;
     const brand = identifyBrand(part);
     if (brand !== "custom" && activeBrand && activeBrand !== brand) {
       blocks.push(lines.join("\n"));

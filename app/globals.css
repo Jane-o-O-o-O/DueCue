@@ -1591,3 +1591,8 @@ dd {
     margin-bottom: 14px;
   }
 }
+
+.settingRow.catalogEntry {
+  color: inherit;
+  text-decoration: none;
+}

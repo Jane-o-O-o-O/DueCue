@@ -2,6 +2,7 @@
 import { useState, useRef, useLayoutEffect, useEffect } from "react";
 import { parseDeviceText } from "@/lib/device-import";
 import { reducedMotion } from "./motion";
+import { catalog } from "../public/catalog-data.js";
 import { identifyBrand } from "../public/brands.js";
 import { BrandIcon } from "./brand-icon";
 import {
@@ -95,6 +96,7 @@ function ScreenshotProof({ picture }: { picture: string }) {
 export default function Importer({
   edit,
   initialMode,
+  catalogBrand,
   ai,
   onRecognized,
   save,
@@ -102,6 +104,7 @@ export default function Importer({
 }: {
   edit?: Entry;
   initialMode: string;
+  catalogBrand?: string;
   ai: boolean;
   onRecognized: (member: {
     active: boolean;
@@ -116,9 +119,20 @@ export default function Importer({
     [input, setInput] = useState(""),
     [images, setImages] = useState<string[]>([]),
     [base, setBase] = useState(""),
-    [drafts, setDrafts] = useState<Draft[]>(() =>
-      edit ? [edit] : initialMode === "manual" ? [blank()] : [],
-    ),
+    [drafts, setDrafts] = useState<Draft[]>(() => {
+      if (edit) return [edit];
+      if (initialMode !== "manual") return [];
+      const chosen = catalog.find((item) => item.slug === catalogBrand);
+      if (!chosen) return [blank()];
+      return [
+        {
+          ...blank(),
+          name: chosen.name,
+          kind: chosen.category === "通信套餐" ? "提醒复查" : "会员到期",
+          cycle: "单次",
+        },
+      ];
+    }),
     [step, setStep] = useState(0),
     [error, err] = useState(""),
     [busy, setBusy] = useState(""),
@@ -462,11 +476,22 @@ export default function Importer({
                   <input
                     autoFocus
                     maxLength={80}
+                    list={mode === "manual" ? "subscription-brands" : undefined}
+                    autoComplete="off"
                     placeholder="例如：芒果 TV"
                     value={d.name}
                     onChange={(e) => change("name", e.target.value)}
                   />
                 </span>
+                {mode === "manual" && (
+                  <datalist id="subscription-brands">
+                    {catalog.map((item) => (
+                      <option key={item.slug} value={item.name}>
+                        {item.plan}
+                      </option>
+                    ))}
+                  </datalist>
+                )}
               </label>
               <label>
                 类型
