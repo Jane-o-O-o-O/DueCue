@@ -1,0 +1,171 @@
+.catalogPage {
+  max-width: 850px;
+  margin: 0 auto;
+  padding: max(20px, env(safe-area-inset-top)) clamp(17px, 4vw, 32px)
+    max(44px, env(safe-area-inset-bottom));
+}
+.catalogPage a {
+  text-decoration: none;
+  color: inherit;
+}
+.catalogBack {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  gap: 2px;
+  font-weight: 600;
+}
+.catalogHeader {
+  margin: 18px 0 20px;
+}
+.catalogHeader h1 {
+  font-size: clamp(30px, 5vw, 42px);
+  line-height: 1.2;
+  letter-spacing: -0.045em;
+}
+.catalogHeader p,
+.catalogResult {
+  color: #686977;
+  font-size: 14px;
+  margin-top: 7px;
+}
+.catalogControls {
+  display: flex;
+  gap: 8px;
+}
+.catalogControls select,
+.catalogSearch {
+  border: 1px solid #dcdde7;
+  border-radius: 14px;
+  background: #fff;
+  color: #383846;
+  min-height: 46px;
+}
+.catalogControls select {
+  max-width: 125px;
+  padding: 0 10px;
+}
+.catalogSearch {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  gap: 8px;
+  padding: 0 13px;
+  color: #737382;
+  min-width: 0;
+}
+.catalogSearch input {
+  background: transparent;
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+}
+.catalogSearch:focus-within,
+.catalogPage a:focus-visible {
+  outline: 2px solid #7364bc;
+  outline-offset: 2px;
+}
+.catalogSection {
+  margin-top: 25px;
+}
+.catalogSection h2 {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0 2px 8px;
+  font-size: 19px;
+  letter-spacing: -0.025em;
+}
+.catalogSection h2 span {
+  font-size: 13px;
+  font-weight: 500;
+  color: #747584;
+}
+.catalogSection ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 285px), 1fr));
+  gap: 8px;
+}
+.catalogSection li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 8px 9px 14px;
+  min-height: 66px;
+  border: 1px solid #e6e6ed;
+  border-radius: 16px;
+  background: white;
+}
+.catalogSection li > div {
+  flex: 1;
+  min-width: 0;
+}
+.catalogSection b {
+  display: block;
+  font-size: 16px;
+  font-weight: 650;
+}
+.catalogProof {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #666674 !important;
+  font-size: 13px;
+  line-height: 1.45;
+  min-height: 24px;
+}
+.catalogProof + .catalogProof {
+  display: flex;
+  width: fit-content;
+}
+.catalogAdd {
+  display: grid;
+  place-items: center;
+  min-width: 44px;
+  min-height: 44px;
+  position: relative;
+  color: #494356 !important;
+  isolation: isolate;
+}
+.catalogAdd::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 7px;
+  border-radius: 50%;
+  background: #f3f1f8;
+}
+.catalogAdd:active {
+  transform: scale(0.95);
+}
+.catalogEmpty {
+  padding: 35px 0;
+  color: #636370;
+  text-align: center;
+}
+.catalogEmpty button {
+  color: #6251a6;
+  text-decoration: underline;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .catalogSection {
+    animation: catalog-in 0.2s ease-out both;
+  }
+  .catalogAdd {
+    transition: transform 0.16s ease-out;
+  }
+  @keyframes catalog-in {
+    from {
+      opacity: 0.4;
+      transform: translateY(3px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
