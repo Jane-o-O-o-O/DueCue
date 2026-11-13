@@ -91,11 +91,14 @@ export function blank(): Entry {
 }
 export function examples(today: string): Entry[] {
   return [
-    ["tencent", "腾讯视频", "25.00", "CNY", 3, "每月", "自动续费"],
-    ["mango", "芒果 TV", "19.00", "CNY", 7, "每月", "自动续费"],
-    ["chatgpt", "ChatGPT Plus", "20.00", "USD", 9, "每月", "自动续费"],
     ["icloud", "iCloud+", "6.00", "CNY", 12, "每月", "自动续费"],
+    ["chatgpt", "ChatGPT Plus", "20.00", "USD", 9, "每月", "自动续费"],
+    ["mango", "芒果 TV", "19.00", "CNY", 7, "每月", "自动续费"],
+    ["netflix", "Netflix", "13.99", "USD", 15, "每月", "自动续费"],
+    ["tencent", "腾讯视频", "25.00", "CNY", 3, "每月", "自动续费"],
     ["spotify", "Spotify Premium", "38.00", "HKD", 18, "每月", "自动续费"],
+    ["unicom", "中国联通", "39.00", "CNY", 20, "每月", "账单还款"],
+    ["disney", "Disney+", "9.99", "USD", 24, "每月", "自动续费"],
   ].map(([id, name, amount, currency, n, cycle, kind]) => ({
     id: String(id),
     name: String(name),
