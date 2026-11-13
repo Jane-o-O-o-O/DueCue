@@ -1,0 +1,107 @@
+{
+  "verified": "2026-11-19",
+  "sources": [
+    {
+      "brand": "apple",
+      "publisher": "Apple",
+      "page": "https://www.apple.com/icloud/",
+      "asset": "https://www.apple.com/ac/globalfooter/8/en_US/assets/ac-footer/breadcrumbs/apple/icon_large.svg"
+    },
+    {
+      "brand": "bilibili",
+      "publisher": "哔哩哔哩",
+      "page": "https://github.com/bilibili",
+      "asset": "https://avatars.githubusercontent.com/u/12002442?v=4"
+    },
+    {
+      "brand": "chatgpt",
+      "publisher": "OpenAI",
+      "page": "https://chatgpt.com/",
+      "asset": "https://chatgpt.com/cdn/assets/favicon-180x180.9e0103ce69.png"
+    },
+    {
+      "brand": "china-mobile",
+      "publisher": "中国移动",
+      "page": "https://www1.10086.cn/aboutus/culture/intro/index/index_detail_45976.html",
+      "asset": "https://www.hkexnews.hk/listedco/listconews/sehk/2026/0326/2026032602014_c.pdf",
+      "preparation": "提取公司 2025 年报封面的蓝绿图形，保留原矢量路径和填色。"
+    },
+    {
+      "brand": "china-telecom",
+      "publisher": "中国电信",
+      "page": "https://www.chinatelecom-h.com/sc/ir/reports.php",
+      "asset": "https://www.chinatelecom-h.com/tc/ir/report/interim2026.pdf",
+      "preparation": "提取公司 2026 年中报封面的蓝色图形，保留原矢量路径和填色。"
+    },
+    {
+      "brand": "china-unicom",
+      "publisher": "中国联通",
+      "page": "https://www.chinaunicom.com.hk/sc/global/home.php",
+      "asset": "https://www.chinaunicom.com.hk/sc/images/home2024/logo_menu.svg",
+      "preparation": "官网页首组合标识中的红色中国结，按原像素裁切。"
+    },
+    {
+      "brand": "claude",
+      "publisher": "Anthropic",
+      "page": "https://platform.claude.com/docs/en/manage-claude/oauth-apps/branding-samples#download-the-logo",
+      "asset": "https://platform.claude.com/docs/en/manage-claude/oauth-apps/branding-samples#download-the-logo",
+      "preparation": "品牌指南提供的 claude-logo.svg。"
+    },
+    {
+      "brand": "disney",
+      "publisher": "Disney Electronic Content, Inc.",
+      "page": "https://apps.apple.com/us/app/disney/id1446075923",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/ca/ca/04/caca048e-69a4-2417-efd6-3393340f79f7/AppIcon-0-0-1x_U007emarketing-0-8-0-0-0-85-220.png/512x512bb.png"
+    },
+    {
+      "brand": "huabei",
+      "publisher": "花呗",
+      "page": "https://render.alipay.com/p/z/huabei-product-online/huabei-pc.html",
+      "asset": "https://gw.alipayobjects.com/zos/rmsportal/DqdEzUgnLLfYdKiEScJB.png",
+      "preparation": "从官方横版标识截取左侧 98×98 图形。"
+    },
+    {
+      "brand": "icloud",
+      "publisher": "Apple",
+      "page": "https://www.apple.com/icloud/",
+      "asset": "https://www.apple.com/v/icloud/ak/images/overview/hero_startframe__bf38llxmjlma_large_2x.png",
+      "preparation": "裁去透明留白，等比缩至 384×224。"
+    },
+    {
+      "brand": "iqiyi",
+      "publisher": "爱奇艺",
+      "page": "https://m.iqiyi.com/",
+      "asset": "https://www.iqiyipic.com/common/fix/h5_iqiyi/desktop_logo-114.png"
+    },
+    {
+      "brand": "mango",
+      "publisher": "芒果 TV",
+      "page": "https://www.mgtv.com/app/",
+      "asset": "https://static.hitv.com/pc/icons/icon_512x512.1b7ca7.png"
+    },
+    {
+      "brand": "netflix",
+      "publisher": "Netflix, Inc.",
+      "page": "https://apps.apple.com/us/app/netflix/id363590051",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/4d/5d/8d/4d5d8d1d-8455-6c65-a256-f41ac98a2419/AppIcon-0-0-1x_U007epad-0-1-0-sRGB-0-85-220.png/512x512bb.png"
+    },
+    {
+      "brand": "spotify",
+      "publisher": "Spotify",
+      "page": "https://apps.apple.com/us/app/spotify-music-and-podcasts/id324684580",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/e9/1f/74/e91f74f7-5d7a-8b48-94ce-ede900d61bff/AppIcon-0-0-1x_U007epad-0-1-0-0-85-220.png/512x512bb.png"
+    },
+    {
+      "brand": "tencent",
+      "publisher": "腾讯视频",
+      "page": "https://v.qq.com/",
+      "asset": "https://vfiles.gtimg.cn/wuji_dashboard/xy/starter/4ea79867.png"
+    },
+    {
+      "brand": "youtube",
+      "publisher": "Google LLC",
+      "page": "https://apps.apple.com/us/app/youtube/id544007664",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/14/ce/45/14ce45d8-5ca6-1dfa-c4a5-4660061cf213/logo_youtube_2024_q4_color-0-0-1x_U007emarketing-0-0-0-7-0-0-0-85-220.png/512x512bb.png"
+    }
+  ]
+}
