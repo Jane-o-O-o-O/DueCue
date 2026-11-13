@@ -36,24 +36,32 @@ const schema = {
   required: ["items"],
   additionalProperties: false,
 };
+async function startTrial(uid: string) {
+  await runtime()
+    .DB.prepare("INSERT OR IGNORE INTO members(owner,started) VALUES(?,?)")
+    .bind(uid, Date.now())
+    .run();
+}
 export async function POST(req: Request) {
   const uid = owner(req);
   if (!uid || !trustedOrigin(req))
     return json({ error: "请先登录再识别。" }, 403);
   if (!(await entitlement(uid)).active)
     return json({ error: "试用期已结束，请先续期。" }, 402);
-  const key = runtime().OPENAI_API_KEY;
-  if (!key)
-    return json(
-      { error: "AI 识别尚未配置。可以切换到手动添加，保存后即可使用提醒。" },
-      503,
-    );
   let b;
   try {
     b = await readBody(req, 9500000);
   } catch {
     return json({ error: "图片太大或内容无效，请裁剪后重试。" }, 400);
   }
+  if (!b || typeof b !== "object")
+    return json({ error: "无效识别请求。" }, 400);
+  if (b.engine === "device") {
+    await startTrial(uid);
+    return json({ member: await entitlement(uid) });
+  }
+  const key = runtime().OPENAI_API_KEY;
+  if (!key) return json({ error: "云端模型尚未配置，可以使用本机识别。" }, 503);
   const image =
     typeof b.image === "string" &&
     /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(b.image);
@@ -101,16 +109,22 @@ export async function POST(req: Request) {
       }),
       signal: AbortSignal.timeout(65000),
     });
-    if (!response.ok)
-      return json(
-        {
-          error:
-            response.status === 429
-              ? "AI 服务暂时繁忙或额度不足，可稍后重试。"
-              : "模型服务暂未完成请求，可稍后重试或手动填写。",
-        },
-        502,
-      );
+    if (!response.ok) {
+      const problem = (await response.json().catch(() => null)) as {
+        error?: { code?: string };
+      } | null;
+      const code = problem?.error?.code;
+      let message = "云端识别暂时不可用，请重试或改用本机识别。";
+      if (response.status === 401)
+        message = "OpenAI 未接受当前密钥，请在站点设置中更新密钥。";
+      else if (code === "model_not_found" || response.status === 403)
+        message = "当前 API 项目无法使用 gpt-6.2-sol，请检查模型权限。";
+      else if (code === "insufficient_quota")
+        message = "OpenAI API 项目额度不足，可以改用本机识别。";
+      else if (response.status === 429)
+        message = "云端识别请求过于频繁，请稍后重试。";
+      return json({ error: message }, 502);
+    }
     const result: any = await response.json();
     if (result.status !== "completed")
       return json({ error: "本次识别没有完整返回，请缩短输入。" }, 422);
@@ -138,11 +152,8 @@ export async function POST(req: Request) {
           .join(" · "),
       };
     });
-    await runtime()
-      .DB.prepare("INSERT OR IGNORE INTO members(owner,started) VALUES(?,?)")
-      .bind(uid, Date.now())
-      .run();
-    return json({ items });
+    if (items.length) await startTrial(uid);
+    return json({ items, member: await entitlement(uid) });
   } catch {
     return json({ error: "识别暂未完成，请重试。" }, 502);
   }

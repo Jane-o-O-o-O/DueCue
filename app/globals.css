@@ -1359,3 +1359,222 @@ dd {
     scroll-behavior: auto !important;
   }
 }
+
+/* The wallet occupies the first screen; the calendar and forecast follow it. */
+.walletHome {
+  max-width: 800px;
+}
+.walletHome .pageHeader {
+  margin: clamp(23px, 4vh, 48px) 0 24px;
+}
+.walletActions {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex: none;
+}
+.scanShortcut {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid #dddee7;
+  border-radius: 50%;
+  background: linear-gradient(#fff, #f7f7fa);
+  color: #343345;
+  box-shadow: 0 1px 2px #2826380a;
+}
+.walletHome .dashGrid {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 22px;
+}
+.walletHome .overviewSide {
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.3fr);
+  align-items: start;
+  gap: 26px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+.cardPocket {
+  position: relative;
+  isolation: isolate;
+}
+.cardPocket[data-overflow="true"] {
+  padding-bottom: 44px;
+}
+.walletHome .deck {
+  --strip: clamp(47px, 6.3svh, 62px);
+  --face: clamp(218px, 28svh, 290px);
+  --inset: 3px;
+  z-index: 1;
+}
+.walletHome .deckCard {
+  z-index: calc(7 - var(--level));
+  border-radius: 25px;
+}
+.walletHome .deckCard.behind {
+  height: calc(var(--strip) + 42px);
+  padding: 0 21px;
+}
+.walletHome .behind .deckName {
+  height: var(--strip);
+}
+.foldCycle {
+  position: absolute;
+  right: 21px;
+  top: 0;
+  height: var(--strip);
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 550;
+  color: #fff;
+  text-shadow: 0 1px 4px #10213355;
+}
+.walletHome .deckCard.front {
+  padding: 20px 23px;
+  box-shadow:
+    inset 0 1px 1px #ffffff77,
+    0 -2px 8px #10263827,
+    0 11px 19px -12px #20324d88;
+}
+.walletHome .deckCard.front::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(0deg, #10283d35, transparent 54%);
+}
+.walletHome .front .platformIcon,
+.walletHome .front .platformIcon svg {
+  width: 38px;
+  height: 38px;
+}
+.walletHome .front .heroAmount strong {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  font-size: clamp(40px, 6vw, 62px);
+  font-weight: 620;
+  letter-spacing: -0.055em;
+}
+.walletHome .front .heroAmount .amountUnknown {
+  font-size: 22px;
+}
+.currencySign {
+  font-size: 0.51em;
+  letter-spacing: -0.045em;
+  font-weight: 550;
+}
+.cloudArt {
+  opacity: 0.94;
+  right: -3%;
+  top: -10%;
+  width: 64%;
+  height: 118%;
+  pointer-events: none;
+}
+.walletHome .deckChip {
+  top: 23px;
+}
+.walletHome .deckNav {
+  margin-top: 5px;
+}
+.moreCards {
+  position: absolute;
+  z-index: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 48px;
+  padding: 0;
+  display: grid;
+  place-items: end center;
+  border-radius: 0 0 25px 25px;
+}
+.foldEdge {
+  position: absolute;
+  inset: -24px 3.5% 4px;
+  overflow: hidden;
+  pointer-events: none;
+  border-radius: 0 0 21px 21px;
+  background: linear-gradient(
+    170deg,
+    color-mix(in srgb, var(--fold-color) 52%, white),
+    color-mix(in srgb, var(--fold-color) 20%, white)
+  );
+  opacity: 0.65;
+  filter: blur(2px);
+  mask-image: linear-gradient(black 50%, transparent 99%);
+}
+.foldEdge::after {
+  content: "";
+  position: absolute;
+  inset: 10px 3% 8px;
+  border-radius: 0 0 20px 20px;
+  border-bottom: 2px solid #ffffffb3;
+}
+.foldCount {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  position: relative;
+  height: 28px;
+  font-size: 12px;
+  font-weight: 580;
+  color: #514d62;
+}
+@media (max-width: 680px) {
+  .walletHome {
+    max-width: 520px;
+    padding-inline: clamp(13px, 4vw, 20px);
+  }
+  .walletHome .pageHeader {
+    margin: 3px 1px 20px;
+  }
+  .walletHome .deck {
+    --strip: clamp(43px, 6.65svh, 59px);
+    --face: clamp(190px, 27svh, 247px);
+    --inset: 2.4px;
+  }
+  .walletHome .deckCard {
+    border-radius: 21px;
+  }
+  .walletHome .deckCard.behind {
+    padding-inline: 15px;
+  }
+  .walletHome .behind .platformIcon,
+  .walletHome .behind .platformIcon svg {
+    width: 28px;
+    height: 28px;
+  }
+  .walletHome .deckCard.front {
+    padding: 17px 18px 18px;
+  }
+  .walletHome .deckChip {
+    top: 19px;
+  }
+  .walletHome .heroDate b {
+    font-size: 16px;
+  }
+  .walletHome .overviewSide {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+    padding-top: 13px;
+  }
+  .walletHome .dashGrid {
+    gap: 10px;
+  }
+  .foldCycle {
+    right: 16px;
+  }
+}
+@media (max-height: 690px) and (max-width: 680px) {
+  .walletHome .deck {
+    --strip: 42px;
+    --face: 180px;
+  }
+  .walletHome .pageHeader {
+    margin-bottom: 14px;
+  }
+}

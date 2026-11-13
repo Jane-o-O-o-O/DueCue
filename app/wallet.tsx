@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import {
   WalletCards,
+  ScanLine,
   CalendarDays,
   Layers3,
   Settings2,
@@ -29,6 +30,7 @@ import {
   daysLeft,
   money,
   calendarFile,
+  symbols,
   Entry,
   shift,
 } from "@/lib/records";
@@ -81,6 +83,32 @@ function Brand() {
   );
 }
 function CardArt({ slug }: { slug: string }) {
+  if (slug === "icloud") {
+    const cloud =
+      "M47 141c-20 0-34-12-34-30 0-16 12-29 28-31 4-20 20-33 39-33 16 0 30 9 37 23 4-2 8-3 13-3 16 0 28 12 30 27 13 2 22 11 22 24 0 14-11 23-27 23Z";
+    return (
+      <svg
+        className="cardArt cloudArt"
+        viewBox="0 0 200 180"
+        aria-hidden="true"
+      >
+        <g transform="rotate(-15 100 90)">
+          {[11, 7, 3, 0].map((offset, i) => (
+            <path
+              key={offset}
+              d={cloud}
+              transform={`translate(${offset},${offset})`}
+              fill={i === 3 ? "#d4eeff" : "#92d4ff"}
+              fillOpacity={i === 3 ? 0.19 : 0.09}
+              stroke="#f4fcff"
+              strokeOpacity={i === 3 ? 0.75 : 0.32}
+              strokeWidth={i === 3 ? 1.4 : 1}
+            />
+          ))}
+        </g>
+      </svg>
+    );
+  }
   const emblem = carrierArtwork(slug);
   if (emblem) {
     return (
@@ -393,7 +421,9 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
     total = expected
       .filter((e) => e.currency === "CNY")
       .reduce((n, e) => n + Number(e.amount), 0),
-    deckSize = Math.min(4, items.length);
+    deckSize = Math.min(6, items.length),
+    hiddenCount = items.length - deckSize,
+    folded = hiddenCount ? items[(index + deckSize) % items.length] : null;
   const touchStart = useRef<{ x: number; y: number } | null>(null);
   const lastSwipe = useRef(0);
   function settleDrag(deck: HTMLDivElement) {
@@ -625,6 +655,7 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
         </div>
       </header>
       <main
+        className={tab === "overview" ? "walletHome" : undefined}
         inert={!!(detail || imp)}
         style={{ "--direction": navDirection } as React.CSSProperties}
       >
@@ -636,14 +667,26 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
             )}
           </div>
           {tab !== "settings" && (
-            <button
-              className="primary add"
-              aria-label="添加订阅"
-              onClick={() => start(ai ? "text" : "manual")}
-            >
-              <Plus size={21} strokeWidth={2.2} />
-              <span>添加订阅</span>
-            </button>
+            <div className="walletActions">
+              {tab === "overview" && (
+                <button
+                  className="scanShortcut"
+                  onClick={() => start("image")}
+                  aria-label="识别截图"
+                  title="识别截图"
+                >
+                  <ScanLine size={21} />
+                </button>
+              )}
+              <button
+                className="primary add"
+                aria-label="添加订阅"
+                onClick={() => start("manual")}
+              >
+                <Plus size={21} strokeWidth={2.2} />
+                <span>添加订阅</span>
+              </button>
+            </div>
           )}
         </header>
         {dbError && (
@@ -672,125 +715,170 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
                 <section className="walletPanel" aria-label="订阅卡片">
                   {curr ? (
                     <>
-                      <div
-                        className="deck"
-                        ref={cardMotion.group}
-                        style={
-                          { "--deck-count": deckSize } as React.CSSProperties
-                        }
-                        onTouchStart={(e) => {
-                          const point = e.touches[0];
-                          touchStart.current = {
-                            x: point.clientX,
-                            y: point.clientY,
-                          };
-                        }}
-                        onTouchMove={(e) => {
-                          const start = touchStart.current;
-                          if (
-                            !start ||
-                            items.length < 2 ||
-                            e.touches.length !== 1 ||
-                            reducedMotion()
-                          )
-                            return;
-                          const dx = e.touches[0].clientX - start.x,
-                            dy = e.touches[0].clientY - start.y;
-                          if (
-                            Math.abs(dy) > Math.abs(dx) &&
-                            !e.currentTarget.dataset.dragging
-                          )
-                            return;
-                          const travel = Math.max(-48, Math.min(48, dx * 0.32));
-                          e.currentTarget.dataset.dragging = "true";
-                          e.currentTarget.style.setProperty(
-                            "--drag-x",
-                            travel + "px",
-                          );
-                          e.currentTarget.style.setProperty(
-                            "--drag-tilt",
-                            travel * 0.055 + "deg",
-                          );
-                        }}
-                        onTouchCancel={(e) => {
-                          settleDrag(e.currentTarget);
-                          touchStart.current = null;
-                        }}
-                        onTouchEnd={(e) => {
-                          const start = touchStart.current;
-                          touchStart.current = null;
-                          if (!start || items.length < 2) return;
-                          const dx = e.changedTouches[0].clientX - start.x,
-                            dy = e.changedTouches[0].clientY - start.y;
-                          if (
-                            Math.abs(dx) > 40 &&
-                            Math.abs(dx) > 1.4 * Math.abs(dy)
-                          ) {
-                            lastSwipe.current = Date.now();
-                            moveCard(dx < 0 ? 1 : -1);
-                          }
-                          settleDrag(e.currentTarget);
-                        }}
-                      >
-                        {Array.from({ length: deckSize }, (_, j) => {
-                          const n = deckSize - 1 - j;
-                          const r = items[(index + n) % items.length];
-                          const slug = identifyBrand(r.name);
-                          const b = (brands as any)[slug];
-                          return (
-                            <button
-                              key={r.id}
-                              data-motion-id={r.id}
-                              className={
-                                "deckCard" + (n ? " behind" : " front")
-                              }
-                              style={
-                                {
-                                  "--level": n,
-                                  "--slot": j,
-                                  "--card": b.dark,
-                                  "--tint": b.light,
-                                } as React.CSSProperties
-                              }
-                              onClick={() => {
-                                if (Date.now() - lastSwipe.current < 450)
-                                  return;
-                                if (n) moveCard(n);
-                                else select(r);
-                              }}
-                              aria-label={
-                                r.name + (n ? "，切换到此卡" : "，打开详情")
-                              }
-                            >
-                              <span className="deckName">
-                                <IconMark name={r.name} />
-                                <b>{r.name}</b>
-                              </span>
-                              {n === 0 && (
-                                <>
-                                  <span className="deckChip">{r.cycle}</span>
-                                  <CardArt slug={slug} />
-                                  <span className="heroFoot">
-                                    <span className="heroAmount">
-                                      <small>{r.kind}</small>
-                                      <strong>{money(r)}</strong>
-                                    </span>
-                                    <span className="heroDate">
-                                      <small>{due(r.date, today)}</small>
-                                      <b>{shortDate(r.date)}</b>
-                                    </span>
-                                  </span>
-                                </>
-                              )}
-                            </button>
-                          );
-                        })}
+                      <div className="cardPocket" data-overflow={!!folded}>
+                        {folded && (
+                          <button
+                            className="moreCards"
+                            aria-label={`还有 ${hiddenCount} 张，显示${folded.name}`}
+                            onClick={() => moveCard(deckSize)}
+                            style={
+                              {
+                                "--fold-color": (brands as any)[
+                                  identifyBrand(folded.name)
+                                ].dark,
+                              } as React.CSSProperties
+                            }
+                          >
+                            <span className="foldEdge" aria-hidden="true" />
+                            <span className="foldCount">
+                              还有 {hiddenCount} 张<ChevronRight size={13} />
+                            </span>
+                          </button>
+                        )}
                         <div
-                          ref={ghosts}
-                          className="cardGhosts"
-                          inert
-                          aria-hidden="true"
-                        />
+                          className="deck"
+                          ref={cardMotion.group}
+                          style={
+                            { "--deck-count": deckSize } as React.CSSProperties
+                          }
+                          onTouchStart={(e) => {
+                            const point = e.touches[0];
+                            touchStart.current = {
+                              x: point.clientX,
+                              y: point.clientY,
+                            };
+                          }}
+                          onTouchMove={(e) => {
+                            const start = touchStart.current;
+                            if (
+                              !start ||
+                              items.length < 2 ||
+                              e.touches.length !== 1 ||
+                              reducedMotion()
+                            )
+                              return;
+                            const dx = e.touches[0].clientX - start.x,
+                              dy = e.touches[0].clientY - start.y;
+                            if (
+                              Math.abs(dy) > Math.abs(dx) &&
+                              !e.currentTarget.dataset.dragging
+                            )
+                              return;
+                            const travel = Math.max(
+                              -48,
+                              Math.min(48, dx * 0.32),
+                            );
+                            e.currentTarget.dataset.dragging = "true";
+                            e.currentTarget.style.setProperty(
+                              "--drag-x",
+                              travel + "px",
+                            );
+                            e.currentTarget.style.setProperty(
+                              "--drag-tilt",
+                              travel * 0.055 + "deg",
+                            );
+                          }}
+                          onTouchCancel={(e) => {
+                            settleDrag(e.currentTarget);
+                            touchStart.current = null;
+                          }}
+                          onTouchEnd={(e) => {
+                            const start = touchStart.current;
+                            touchStart.current = null;
+                            if (!start || items.length < 2) return;
+                            const dx = e.changedTouches[0].clientX - start.x,
+                              dy = e.changedTouches[0].clientY - start.y;
+                            if (
+                              Math.abs(dx) > 40 &&
+                              Math.abs(dx) > 1.4 * Math.abs(dy)
+                            ) {
+                              lastSwipe.current = Date.now();
+                              moveCard(dx < 0 ? 1 : -1);
+                            }
+                            settleDrag(e.currentTarget);
+                          }}
+                        >
+                          {Array.from({ length: deckSize }, (_, j) => {
+                            const n = deckSize - 1 - j;
+                            const r = items[(index + n) % items.length];
+                            const slug = identifyBrand(r.name);
+                            const b = (brands as any)[slug];
+                            return (
+                              <button
+                                key={r.id}
+                                data-motion-id={r.id}
+                                className={
+                                  "deckCard" + (n ? " behind" : " front")
+                                }
+                                style={
+                                  {
+                                    "--level": n,
+                                    "--slot": j,
+                                    "--card": b.dark,
+                                    "--tint": b.light,
+                                  } as React.CSSProperties
+                                }
+                                onClick={() => {
+                                  if (Date.now() - lastSwipe.current < 450)
+                                    return;
+                                  if (n) moveCard(n);
+                                  else select(r);
+                                }}
+                                aria-label={
+                                  r.name + (n ? "，切换到此卡" : "，打开详情")
+                                }
+                              >
+                                <span className="deckName">
+                                  <IconMark name={r.name} />
+                                  <b>{r.name}</b>
+                                </span>
+                                {n > 0 && (
+                                  <span className="foldCycle">{r.cycle}</span>
+                                )}
+                                {n === 0 && (
+                                  <>
+                                    <span className="deckChip">{r.cycle}</span>
+                                    <CardArt slug={slug} />
+                                    <span className="heroFoot">
+                                      <span className="heroAmount">
+                                        <small>{r.kind}</small>
+                                        <strong
+                                          className={
+                                            r.amount === ""
+                                              ? "amountUnknown"
+                                              : undefined
+                                          }
+                                        >
+                                          {r.amount === "" ? (
+                                            money(r)
+                                          ) : (
+                                            <>
+                                              <span className="currencySign">
+                                                {symbols[r.currency] ||
+                                                  r.currency}
+                                              </span>
+                                              {Number(r.amount).toFixed(2)}
+                                            </>
+                                          )}
+                                        </strong>
+                                      </span>
+                                      <span className="heroDate">
+                                        <small>{due(r.date, today)}</small>
+                                        <b>{shortDate(r.date)}</b>
+                                      </span>
+                                    </span>
+                                  </>
+                                )}
+                              </button>
+                            );
+                          })}
+                          <div
+                            ref={ghosts}
+                            className="cardGhosts"
+                            inert
+                            aria-hidden="true"
+                          />
+                        </div>
                       </div>
                       {items.length > 1 && (
                         <div className="deckNav">
@@ -962,9 +1050,9 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
                 <div className="settingRow">
                   <span>
                     <b>截图与文字识别</b>
-                    <small>gpt-6.2-sol</small>
+                    <small>{ai ? "gpt-6.2-sol" : "本机识别"}</small>
                   </span>
-                  <small>{ai ? "可用" : "待开通"}</small>
+                  <small>可用</small>
                 </div>
                 <div className="settingRow">
                   <span>
@@ -1101,6 +1189,7 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
               edit={edit}
               initialMode={imp}
               ai={ai}
+              onRecognized={setMember}
               save={save}
               close={close}
             />

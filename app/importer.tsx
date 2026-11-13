@@ -1,5 +1,6 @@
 "use client";
-import { useState, useRef, useLayoutEffect } from "react";
+import { useState, useRef, useLayoutEffect, useEffect } from "react";
+import { parseDeviceText } from "@/lib/device-import";
 import { reducedMotion } from "./motion";
 import { badge, identifyBrand } from "../public/brands.js";
 import {
@@ -94,12 +95,19 @@ export default function Importer({
   edit,
   initialMode,
   ai,
+  onRecognized,
   save,
   close,
 }: {
   edit?: Entry;
   initialMode: string;
   ai: boolean;
+  onRecognized: (member: {
+    active: boolean;
+    started: number;
+    end: number;
+    paid: boolean;
+  }) => void;
   save: (a: Entry[]) => Promise<void>;
   close: () => void;
 }) {
@@ -112,7 +120,11 @@ export default function Importer({
     ),
     [step, setStep] = useState(0),
     [error, err] = useState(""),
-    [busy, setBusy] = useState("");
+    [busy, setBusy] = useState(""),
+    [deviceOverride, setDeviceOverride] = useState(false);
+  const local = !ai || deviceOverride;
+  const job = useRef<AbortController | null>(null);
+  useEffect(() => () => job.current?.abort(), []);
   const file = useRef<HTMLInputElement>(null);
   const d = drafts[step];
   const sheet = useRef<HTMLElement>(null);
@@ -154,20 +166,39 @@ export default function Importer({
   async function recognize() {
     err("");
     setBusy("正在识别…");
+    const controller = new AbortController();
+    job.current = controller;
     try {
       const items: Draft[] = [];
       const sources = mode === "image" ? images : [""];
+      const baseDate = mode === "text" ? iso(new Date()) : base;
+      const readings =
+        local && mode === "image"
+          ? await (
+              await import("@/lib/device-ocr")
+            ).readScreenshots(images, setBusy, controller.signal)
+          : [];
       for (const [i, im] of sources.entries()) {
-        setBusy("正在识别 " + (i + 1) + " / " + sources.length);
-        const result = await requestJSON("/api/recognize", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            text: mode === "text" ? input : "",
-            image: im,
-            baseDate: mode === "text" ? iso(new Date()) : base,
-          }),
-        });
+        if (controller.signal.aborted) throw Error("识别已取消。");
+        const result = local
+          ? {
+              items: parseDeviceText(
+                im ? readings[i].text : input,
+                baseDate,
+                im ? readings[i].confidence : 100,
+              ),
+            }
+          : await requestJSON("/api/recognize", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              signal: controller.signal,
+              body: JSON.stringify({
+                text: mode === "text" ? input : "",
+                image: im,
+                baseDate,
+              }),
+            });
+        if (result.member) onRecognized(result.member);
         for (const a of result.items) {
           items.push({
             ...blank(),
@@ -191,12 +222,22 @@ export default function Importer({
         throw Error(
           "没有读到订阅信息。可以裁剪包含续费说明的区域，或手动填写。",
         );
+      if (local) {
+        const usage = await requestJSON("/api/recognize", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          signal: controller.signal,
+          body: JSON.stringify({ engine: "device" }),
+        });
+        if (usage.member) onRecognized(usage.member);
+      }
       rememberSheet();
       setDrafts(items);
       setStep(0);
     } catch (e: any) {
-      err(e.message);
+      err(controller.signal.aborted ? "识别已取消。" : e.message);
     } finally {
+      job.current = null;
       setBusy("");
     }
   }
@@ -307,7 +348,8 @@ export default function Importer({
                       const fs = Array.from(e.target.files || []);
                       setBusy("正在读取截图…");
                       try {
-                        const next = await Promise.all(fs.map(getImage));
+                        const next: string[] = [];
+                        for (const f of fs) next.push(await getImage(f));
                         setImages(next);
                         err("");
                       } catch (ex: any) {
@@ -347,9 +389,11 @@ export default function Importer({
               )}
             </div>
             <p className="hint">
-              {ai
-                ? "所选内容将发送给 OpenAI 识别。"
-                : "AI 识别待开通，可手动添加。"}
+              {local
+                ? mode === "image"
+                  ? "本机识别，截图留在此设备。首次使用需下载识别组件。"
+                  : "在本机提取平台、金额和日期。"
+                : "所选内容将发送给 OpenAI 识别。"}
             </p>
             {error && (
               <p className="error" role="alert">
@@ -359,9 +403,7 @@ export default function Importer({
             <button
               className="primary wide"
               disabled={
-                !ai ||
-                !!busy ||
-                (mode === "text" ? !input.trim() : !images.length)
+                !!busy || (mode === "text" ? !input.trim() : !images.length)
               }
               onClick={recognize}
             >
@@ -372,6 +414,26 @@ export default function Importer({
                 <ScanLine size={17} />
               )}
             </button>
+            {busy && job.current && (
+              <button
+                type="button"
+                className="textBtn"
+                onClick={() => job.current?.abort()}
+              >
+                取消识别
+              </button>
+            )}
+            {error && !local && !busy && (
+              <button
+                className="textBtn"
+                onClick={() => {
+                  setDeviceOverride(true);
+                  err("");
+                }}
+              >
+                改用本机识别
+              </button>
+            )}
           </>
         ) : (
           <>
