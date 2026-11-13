@@ -1,9 +1,13 @@
 import { Smartphone, WalletCards } from "lucide-react";
+import { catalog } from "../public/catalog-data.js";
 import { identifyBrand } from "../public/brands.js";
 
 type Artwork = { file: string; standalone?: boolean; hero?: boolean };
 
 const artwork: Record<string, Artwork> = {
+  ...Object.fromEntries(
+    catalog.map(({ slug }) => [slug, { file: slug + ".png" }]),
+  ),
   chatgpt: { file: "chatgpt.png" },
   netflix: { file: "netflix.png" },
   spotify: { file: "spotify.png" },
@@ -30,9 +34,11 @@ export function emblemArtwork(slug: string) {
 export function BrandIcon({
   name,
   className = "",
+  lazy = false,
 }: {
   name: string;
   className?: string;
+  lazy?: boolean;
 }) {
   const slug = identifyBrand(name);
   const mark = artwork[slug];
@@ -55,6 +61,8 @@ export function BrandIcon({
           alt=""
           width={36}
           height={36}
+          loading={lazy ? "lazy" : undefined}
+          decoding="async"
           draggable={false}
         />
       ) : phone ? (

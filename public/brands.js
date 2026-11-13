@@ -1,5 +1,18 @@
 // Card colors are separate from the publisher-supplied images.
+import { catalog } from "./catalog-data.js";
+
 export const brands = {
+  ...Object.fromEntries(
+    catalog.map(({ slug, name, color }) => [
+      slug,
+      {
+        name,
+        color,
+        dark: shade(color, 0.58),
+        light: shade(color, 0.95),
+      },
+    ]),
+  ),
   chatgpt: {
     name: "ChatGPT",
     color: "#3D4449",
@@ -110,13 +123,72 @@ export const brands = {
   },
 };
 
+function shade(color, factor) {
+  const channels = color
+    .slice(1)
+    .match(/../g)
+    .map((pair) => parseInt(pair, 16));
+  // Limit the brightest end of the gradient behind white renewal dates.
+  const brightness =
+    channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
+  const scale = factor * Math.min(1, 152 / Math.max(1, brightness));
+  return (
+    "#" +
+    channels
+      .map((value) =>
+        Math.round(value * scale)
+          .toString(16)
+          .padStart(2, "0"),
+      )
+      .join("")
+  );
+}
+
+export function searchKey(value) {
+  return String(value ?? "")
+    .normalize("NFKC")
+    .toLowerCase()
+    .trim()
+    .replace(/\s+(?=[\u3400-\u9fff])|(?<=[\u3400-\u9fff])\s+(?=[a-z0-9])/g, "")
+    .replace(/\s+/g, " ");
+}
+const cautious = new Set([
+  "qq",
+  "得到",
+  "幕布",
+  "豆包",
+  "keep",
+  "智行",
+  "同程",
+]);
+const terms = catalog
+  .flatMap((row) =>
+    [row.name, ...row.aliases].map((value) => {
+      const term = searchKey(value);
+      const source = term
+        .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+        .replace(/ /g, "\\s*");
+      const left = /^[a-z0-9]/.test(term) ? "(?<![a-z0-9])" : "";
+      const right = /[a-z0-9]$/.test(term) ? "(?![a-z0-9])" : "";
+      const qualified = cautious.has(term)
+        ? "(?=\\s*(?:会员|听书|笔记|订阅|月付|年付|到期|续费|VIP|SVIP|$))"
+        : "";
+      return {
+        term,
+        slug: row.slug,
+        pattern: new RegExp(left + source + right + qualified, "i"),
+      };
+    }),
+  )
+  .sort((a, b) => b.term.length - a.term.length);
+
 /** @type {Array<[string, RegExp]>} */
 const aliases = [
-  ["icloud", /icloud|云空间|苹果云/],
+  ["icloud", /icloud|苹果云/],
   ["chatgpt", /chat\s*gpt|open\s*ai|gpt\s*(?:plus|pro)/],
   ["netflix", /netflix|奈飞|网飞/],
   ["spotify", /spotify|声田/],
-  ["tencent", /腾讯(?:视频|会员)|腾讯|tencent|wetv/],
+  ["tencent", /腾讯(?:视频|会员)|^腾讯$|^tencent$|tencent\s*video|wetv/],
   ["mango", /芒果|mang[oO]/i],
   ["claude", /claude|anthropic|克劳德/],
   ["bilibili", /哔哩|哔站|b站|bilibili/],
@@ -142,12 +214,14 @@ const aliases = [
 ];
 
 export function identifyBrand(name) {
-  const text = String(name ?? "")
-    .normalize("NFKC")
-    .toLowerCase()
-    .trim();
+  const text = searchKey(name);
   if (Object.hasOwn(brands, text)) return text;
+  const primary = text
+    .split(/(?:附赠|赠送|权益包含|包含权益)/, 1)[0]
+    .replace(/京东白条|京东金条|京东金融|美团月付|美团借钱/g, " ");
+  const match = terms.find(({ pattern }) => pattern.test(primary));
+  if (match) return match.slug;
   return (
-    aliases.find(([, expression]) => expression.test(text))?.[0] ?? "custom"
+    aliases.find(([, expression]) => expression.test(primary))?.[0] ?? "custom"
   );
 }

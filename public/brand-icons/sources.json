@@ -2,16 +2,70 @@
   "verified": "2026-11-19",
   "sources": [
     {
+      "brand": "2bulu",
+      "publisher": "深圳市两步路信息技术有限公司",
+      "page": "https://apps.apple.com/cn/app/%E4%B8%A4%E6%AD%A5%E8%B7%AF-%E8%AE%B0%E5%BD%95%E6%88%B7%E5%A4%96%E7%B2%BE%E5%BD%A9%E7%94%9F%E6%B4%BB/id646277024",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/25/f9/31/25f9318f-25ac-9b43-b8a3-f10b0db366ca/AppIcon-0-0-1x_U007epad-0-1-0-sRGB-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "360-camera",
+      "publisher": "Beijing Vision World Technology Co., Ltd.",
+      "page": "https://apps.apple.com/cn/app/360%E6%91%84%E5%83%8F%E6%9C%BA/id958068931",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/ff/20/07/ff20071f-3350-1f1c-2313-a3023bd2eebe/AppIcon-0-1x_U007emarketing-0-7-0-sRGB-85-220-0.png/512x512bb.jpg"
+    },
+    {
+      "brand": "aliyun-drive",
+      "publisher": "Hangzhou DuanquNetwork Media Technology Co., Ltd.",
+      "page": "https://apps.apple.com/cn/app/id1494661473",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/63/ee/f6/63eef640-3cca-8b2a-bb42-ba927561ef80/AppIcon-0-0-1x_U007epad-0-1-0-85-220.png/512x512bb.jpg"
+    },
+    {
       "brand": "apple",
       "publisher": "Apple",
       "page": "https://www.apple.com/icloud/",
       "asset": "https://www.apple.com/ac/globalfooter/8/en_US/assets/ac-footer/breadcrumbs/apple/icon_large.svg"
     },
     {
+      "brand": "babybus",
+      "publisher": "宝宝巴士股份有限公司",
+      "page": "https://apps.apple.com/cn/app/%E5%AE%9D%E5%AE%9D%E5%B7%B4%E5%A3%AB-%E5%84%BF%E7%AB%A5%E6%97%A9%E6%95%99%E7%9B%8A%E6%99%BA%E5%BF%AB%E4%B9%90%E5%90%AF%E8%92%99%E5%A4%A7%E5%85%A8/id1031121586",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/f1/7f/6b/f17f6b4d-ddee-464d-2585-c279d465e27c/AppIcon-0-0-1x_U007epad-0-1-0-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "baicizhan",
+      "publisher": "成都超爱学习科技有限公司",
+      "page": "https://apps.apple.com/cn/app/%E7%99%BE%E8%AF%8D%E6%96%A9-%E8%83%8C%E5%8D%95%E8%AF%8D-%E5%AD%A6%E8%8B%B1%E8%AF%AD%E6%97%A5%E8%AF%AD%E9%9F%A9%E8%AF%AD%E6%B3%95%E8%AF%AD/id557545298",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/05/f1/a5/05f1a577-8ffd-b6b2-8b89-eb5703ad2343/AppIcon-0-0-1x_U007epad-0-1-0-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "baidu-drive",
+      "publisher": "Beijing Duyou Science and Technology Co.,Ltd.",
+      "page": "https://apps.apple.com/cn/app/id547166701",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/23/49/2b/23492b76-ef58-16e7-2a01-0ebfdc0a01e2/AppIcon-0-0-1x_U007ephone-0-1-0-0-sRGB-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "baidu-wenku",
+      "publisher": "Beijing Baidu Netcom Science & Technology Co.,Ltd",
+      "page": "https://apps.apple.com/cn/app/id426340811",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/fa/e6/19/fae6191c-5778-9cf4-41f8-6895a7fbd60c/AppIcon-0-0-1x_U007ephone-0-1-0-sRGB-85-220.png/512x512bb.jpg"
+    },
+    {
       "brand": "bilibili",
       "publisher": "哔哩哔哩",
       "page": "https://github.com/bilibili",
       "asset": "https://avatars.githubusercontent.com/u/12002442?v=4"
+    },
+    {
+      "brand": "bilibili-manga",
+      "publisher": "上海呵呵呵文化传播有限公司",
+      "page": "https://apps.apple.com/cn/app/%E5%93%94%E5%93%A9%E5%93%94%E5%93%A9%E6%BC%AB%E7%94%BB-%E7%9C%8B%E6%BC%AB%E7%94%BB%E5%B0%8F%E8%AF%B4%E5%A4%A7%E5%85%A8/id1426252715",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/0f/f0/c4/0ff0c466-205b-49f1-1c97-cbdc7704cc26/AppIcon-0-0-1x_U007emarketing-0-8-0-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "boohee",
+      "publisher": "BOOHEE TECHNOLOGY",
+      "page": "https://apps.apple.com/cn/app/%E8%96%84%E8%8D%B7%E5%81%A5%E5%BA%B7-ai%E5%87%8F%E8%82%A5%E5%81%A5%E8%BA%AB%E8%BD%BB%E6%96%AD%E9%A3%9F%E4%BD%93%E9%87%8D%E7%AE%A1%E7%90%86%E5%B9%B3%E5%8F%B0/id457856023",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/07/16/f1/0716f10e-492c-9997-8053-e5ed64951166/AppIcon-0-0-1x_U007epad-0-11-0-sRGB-85-220.png/512x512bb.jpg"
     },
     {
       "brand": "chatgpt",
@@ -48,10 +102,88 @@
       "preparation": "品牌指南提供的 claude-logo.svg。"
     },
     {
+      "brand": "cmcc-drive",
+      "publisher": "China Mobile Internet Company Limited",
+      "page": "https://apps.apple.com/cn/app/id1618137934",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/65/1e/00/651e00a3-a5f4-0088-b4d6-dc5f826ace2f/AppIcon-0-0-1x_U007ephone-0-5-0-sRGB-85-220-0.png/512x512bb.jpg"
+    },
+    {
+      "brand": "codoon",
+      "publisher": "Chengdu Ledong Information & Technology Co., Ltd.",
+      "page": "https://apps.apple.com/cn/app/%E5%92%95%E5%92%9A-%E8%B7%91%E6%AD%A5%E9%AA%91%E8%A1%8C%E5%81%A5%E8%B5%B0%E8%AE%AD%E7%BB%83%E9%A9%AC%E6%8B%89%E6%9D%BE%E8%B5%9B%E4%BA%8B%E6%B4%BB%E5%8A%A8/id453480684",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/c6/f2/e9/c6f2e91d-b5b5-4d2e-6834-47cb78459e09/AppIcon-0-0-1x_U007emarketing-0-7-0-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "costco",
+      "publisher": "Costco (China) Investment Co., Ltd.",
+      "page": "https://apps.apple.com/cn/app/%E5%BC%80%E5%B8%82%E5%AE%A2/id1457942022",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/79/3b/fd/793bfd37-e45a-f9b1-e753-4b978125e4ca/AppIcon-0-0-1x_U007emarketing-0-6-0-85-220.png/512x512bb.png"
+    },
+    {
+      "brand": "ctrip",
+      "publisher": "Shanghai Ctrip Commerce Co.,Ltd",
+      "page": "https://apps.apple.com/cn/app/%E6%90%BA%E7%A8%8B%E6%97%85%E8%A1%8C-%E8%AE%A2%E9%85%92%E5%BA%97%E6%9C%BA%E7%A5%A8%E7%81%AB%E8%BD%A6%E7%A5%A8/id379395415",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/d0/b0/51/d0b05172-fe05-4868-3e9b-616519565eca/AppIcon-0-0-1x_U007emarketing-0-5-0-85-220.png/512x512bb.png"
+    },
+    {
+      "brand": "dedao",
+      "publisher": "luojilab",
+      "page": "https://apps.apple.com/cn/app/id1016323413",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/25/8c/84/258c847c-8103-929a-6a2e-ce447285e87f/AppIcon-0-0-1x_U007epad-0-1-0-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "didi-qingju",
+      "publisher": "杭州小木吉软件科技有限公司",
+      "page": "https://didiglobal.com/travel-service/bike",
+      "asset": "https://pt-starimg.didistatic.com/static/starimg/img/1528454666030S63q1t947DPh59Vwrz6.png"
+    },
+    {
+      "brand": "dingdong",
+      "publisher": "Shanghai 100 meters  Network Technology Co., Ltd.",
+      "page": "https://apps.apple.com/cn/app/%E5%8F%AE%E5%92%9A%E4%B9%B0%E8%8F%9C-%E5%93%81%E8%B4%A8%E4%B9%8B%E7%88%B1/id768082524",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/db/4a/86/db4a86e8-b0b0-a177-e84f-68a7699d6ea4/AppIcon-0-0-1x_U007emarketing-0-6-0-0-sRGB-85-220.png/512x512bb.png"
+    },
+    {
       "brand": "disney",
       "publisher": "Disney Electronic Content, Inc.",
       "page": "https://apps.apple.com/us/app/disney/id1446075923",
       "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/ca/ca/04/caca048e-69a4-2417-efd6-3393340f79f7/AppIcon-0-0-1x_U007emarketing-0-8-0-0-0-85-220.png/512x512bb.png"
+    },
+    {
+      "brand": "doubao",
+      "publisher": "Beijing Chuntian Zhiyun Technology Co., Ltd.",
+      "page": "https://apps.apple.com/cn/app/id6459478672",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/76/97/22/769722f0-2b89-f875-278d-25f78101f454/AppIcon-0-0-1x_U007epad-0-8-0-sRGB-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "ezviz",
+      "publisher": "Hangzhou Ezviz Network Co., Ltd",
+      "page": "https://apps.apple.com/cn/app/%E8%90%A4%E7%9F%B3%E4%BA%91%E8%A7%86%E9%A2%91/id571195405",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/10/b3/b1/10b3b11e-28cd-aafc-6b89-e96b26e09fa4/AppIcon-0-0-1x_U007emarketing-0-11-0-sRGB-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "gaoding",
+      "publisher": "Gaoding (Xiamen) Technology Co., Ltd.",
+      "page": "https://apps.apple.com/cn/app/id1113276760",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/db/be/49/dbbe49dc-ea1d-631d-c678-4501cf323ecb/AppIcon-0-0-1x_U007epad-0-11-0-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "genshin-cloud",
+      "publisher": "Shanghai miHoYo YingTie Technology Co., Ltd.",
+      "page": "https://apps.apple.com/cn/app/id1569029742",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/eb/f5/7d/ebf57d4b-d04b-b88b-21b1-6d76a9cd7b62/AppIcon-0-0-1x_U007epad-0-1-0-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "hellobike",
+      "publisher": "Shanghai Haluo Pratt&Whitney Technology Co., Ltd",
+      "page": "https://apps.apple.com/cn/app/%E5%93%88%E5%95%B0-%E9%AA%91%E8%BD%A6%E9%A1%BA%E9%A3%8E%E8%BD%A6%E6%89%93%E8%BD%A6%E7%A7%9F%E8%BD%A6/id1165227346",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/4c/d2/7c/4cd27cdc-9ec3-9a99-72a9-9efdddbd1621/AppIcon-0-0-1x_U007emarketing-0-8-0-85-220.png/512x512bb.png"
+    },
+    {
+      "brand": "hema",
+      "publisher": "Shanghai Heli Network Technical Service Co., Ltd.",
+      "page": "https://apps.apple.com/cn/app/%E7%9B%92%E9%A9%AC-%E9%B2%9C%E7%BE%8E%E7%94%9F%E6%B4%BB/id1063183999",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/cb/98/60/cb9860c1-8071-dab2-b83b-4602d8c334fc/AppIcon-0-1x_U007emarketing-0-8-0-sRGB-85-220-0.png/512x512bb.png"
     },
     {
       "brand": "huabei",
@@ -61,11 +193,35 @@
       "preparation": "从官方横版标识截取左侧 98×98 图形。"
     },
     {
+      "brand": "huawei-cloud",
+      "publisher": "华为终端",
+      "page": "https://consumer.huawei.com/cn/mobileservices/mobilecloud/",
+      "asset": "https://consumer.huawei.com/content/dam/huawei-cbg-site/cn/mkt/mobileservices/mobilecloud/imgs/section-kv/huawei-mobilecloud-kv-cloud-icon.svg"
+    },
+    {
       "brand": "icloud",
       "publisher": "Apple",
       "page": "https://www.apple.com/icloud/",
       "asset": "https://www.apple.com/v/icloud/ak/images/overview/hero_startframe__bf38llxmjlma_large_2x.png",
       "preparation": "裁去透明留白，等比缩至 384×224。"
+    },
+    {
+      "brand": "iflytek-spark",
+      "publisher": "Wuhu Zhihuigu Technology Service Co., Ltd.",
+      "page": "https://apps.apple.com/cn/app/id6449919551",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/d0/67/c6/d067c66b-f3e8-dc1c-cc70-1277ee7a0834/AppIcon-0-0-1x_U007epad-0-1-0-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "ihuman-literacy",
+      "publisher": "Human and Perfect Future Education co.,Ltd",
+      "page": "https://apps.apple.com/cn/app/%E6%B4%AA%E6%81%A9%E8%AF%86%E5%AD%97-%E5%84%BF%E7%AB%A5%E8%AF%86%E5%AD%97%E5%90%AF%E8%92%99%E5%BF%85%E5%A4%87/id1139733348",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/ef/2c/4f/ef2c4f62-448b-e896-bb0b-7cc4f3646636/AppIcon-0-0-1x_U007epad-0-1-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "imou",
+      "publisher": "Huacheng Network Technology Co.,Ltd.",
+      "page": "https://apps.apple.com/cn/app/%E4%B9%90%E6%A9%99-%E6%99%BA%E4%BA%AB%E6%A9%99%E6%84%8F%E7%94%9F%E6%B4%BB/id881803365",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/df/67/55/df67557e-e22d-1146-8196-c457f426ac19/AppIcon-0-0-1x_U007emarketing-0-8-0-0-85-220.png/512x512bb.jpg"
     },
     {
       "brand": "iqiyi",
@@ -74,10 +230,154 @@
       "asset": "https://www.iqiyipic.com/common/fix/h5_iqiyi/desktop_logo-114.png"
     },
     {
+      "brand": "jd",
+      "publisher": "Beijing Jingdong Century Trading Co., Ltd.",
+      "page": "https://apps.apple.com/cn/app/%E4%BA%AC%E4%B8%9C-%E5%8F%88%E5%A5%BD%E5%8F%88%E4%BE%BF%E5%AE%9C/id414245413",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/08/f9/cd/08f9cd9b-9594-ef45-dbc9-e7d5cf5da234/AppIcon-0-0-1x_U007epad-0-1-0-0-85-220.png/512x512bb.png"
+    },
+    {
+      "brand": "jianying",
+      "publisher": "Shenzhen Lianmeng Technology Co.Ltd.",
+      "page": "https://apps.apple.com/cn/app/id1458072671",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/cd/38/e7/cd38e78a-afa6-0467-98a6-3cd92b03cce4/AppIcon-0-0-1x_U007emarketing-0-8-0-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "jimeng",
+      "publisher": "Shenzhen Lianmeng Technology Co.Ltd.",
+      "page": "https://apps.apple.com/cn/app/id6503676563",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/bb/3c/1d/bb3c1d27-8ea0-5cf4-343d-da6496853521/AppIcon-0-0-1x_U007ephone-0-1-P3-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "kaishu-story",
+      "publisher": "Beijing Kaisheng Culture Media Co., Ltd.",
+      "page": "https://apps.apple.com/cn/app/%E5%87%AF%E5%8F%94%E8%AE%B2%E6%95%85%E4%BA%8B-%E5%84%BF%E7%AB%A5%E7%9D%A1%E5%89%8D%E6%95%85%E4%BA%8B%E5%A4%A7%E5%85%A8/id998790080",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/c3/3d/b8/c33db8ef-c587-bcdc-b741-1edca8a50bef/AppIcon-0-0-1x_U007emarketing-0-8-0-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "keep-fitness",
+      "publisher": "Beijing Calorie Technology Co., Ltd.",
+      "page": "https://apps.apple.com/cn/app/keep-ai-%E8%BF%90%E5%8A%A8%E6%95%99%E7%BB%83/id952694580",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/62/e9/85/62e98549-8de8-07bd-d632-9cd793165269/AppIcon-0-0-1x_U007epad-0-1-0-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "kfc",
+      "publisher": "Kendingxing Information Technology Shanghai Co., Ltd",
+      "page": "https://apps.apple.com/cn/app/%E8%82%AF%E5%BE%B7%E5%9F%BAkfc-%E5%AE%98%E6%96%B9%E7%89%88/id587238847",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/2c/bd/9b/2cbd9b3a-424e-2ca3-f50b-9fab888f18d4/AppIcon-0-0-1x_U007ephone-0-11-0-85-220.png/512x512bb.png"
+    },
+    {
+      "brand": "kimi",
+      "publisher": "Beijing Moonshot Technology Co., Ltd",
+      "page": "https://apps.apple.com/cn/app/id6474233312",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/f9/1e/09/f91e093b-8f95-3b88-4683-8f154f6179cf/AppIcon26-0-0-1x_U007epad-0-1-0-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "kuaikan",
+      "publisher": "快看世界（北京）科技有限公司",
+      "page": "https://www.kuaikanmanhua.com/",
+      "asset": "https://festatic.v3mh.com/static-resource/img/20210706/tiny/logo_512x512.png"
+    },
+    {
+      "brand": "kugou",
+      "publisher": "Guangzhou KuGou Technology CO. , LTD",
+      "page": "https://apps.apple.com/cn/app/id472208016",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/a4/e4/9c/a4e49c35-9549-a9d2-e584-a75549dcb9cd/AppIcon-0-0-1x_U007epad-0-1-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "kuwo",
+      "publisher": "Kuwo Tianjin Co., Ltd.",
+      "page": "https://apps.apple.com/cn/app/id588673713",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/a8/cb/39/a8cb39c7-bc3e-c4df-188e-23f5b6943e2c/AppIcon-1x_U007emarketing-0-7-0-0-sRGB-85-220-0.png/512x512bb.jpg"
+    },
+    {
+      "brand": "lanren-audio",
+      "publisher": "Lazyaudio Online Co., Ltd.",
+      "page": "https://apps.apple.com/cn/app/%E6%87%92%E4%BA%BA%E5%90%AC%E4%B9%A6-%E6%9C%89%E5%A3%B0%E5%B0%8F%E8%AF%B4%E8%AF%84%E4%B9%A6%E7%9B%B8%E5%A3%B0%E9%9F%B3%E4%B9%90%E5%85%A8%E7%95%85%E5%90%AC/id559977766",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/5e/c6/65/5ec6659a-64ab-e557-83d9-4c9f9317fa3c/AppIcon-0-0-1x_U007emarketing-0-0-0-8-0-0-sRGB-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "maiduidui",
+      "publisher": "Guangzhou Maiduidui Technology Co., Ltd.",
+      "page": "https://apps.apple.com/cn/app/id1314769817",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/0d/62/aa/0d62aada-cad9-4278-ad00-a28c762cf3b5/AppIcon-0-0-1x_U007emarketing-0-8-0-85-220.png/512x512bb.jpg"
+    },
+    {
       "brand": "mango",
       "publisher": "芒果 TV",
       "page": "https://www.mgtv.com/app/",
       "asset": "https://static.hitv.com/pc/icons/icon_512x512.1b7ca7.png"
+    },
+    {
+      "brand": "mcdonalds",
+      "publisher": "McDonald's (China) Co., Ltd.",
+      "page": "https://apps.apple.com/cn/app/%E9%BA%A6%E5%BD%93%E5%8A%B3mcdonalds-%E5%88%B0%E5%BA%97%E5%8F%96%E9%A4%90-%E9%BA%A6%E5%92%96%E5%95%A1-%E9%BA%A6%E4%B9%90%E9%80%81/id1054598922",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/85/62/6b/85626b00-fcf9-d847-be71-c81dda1eff73/AppIcon-0-0-1x_U007emarketing-0-11-0-85-220.png/512x512bb.png"
+    },
+    {
+      "brand": "meipian",
+      "publisher": "南京蓝鲸人网络科技有限公司",
+      "page": "https://apps.apple.com/cn/app/%E7%BE%8E%E7%AF%87-%E8%AE%B0%E5%BD%95%E7%BE%8E%E5%A5%BD-%E5%88%86%E4%BA%AB%E6%84%9F%E5%8A%A8/id987570993",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/06/cd/f6/06cdf632-ab69-1c42-bdc3-2f49d4fe902b/AppIcon-0-0-1x_U007emarketing-0-8-0-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "meitu",
+      "publisher": "Meitu Technology Co., Ltd.",
+      "page": "https://apps.apple.com/cn/app/id416048305",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/74/f6/fb/74f6fb2e-ae36-c151-4136-e092fe209d8c/AppIcon-0-0-1x_U007emarketing-0-9-0-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "meituan",
+      "publisher": "Sankuai Technology Co., Ltd.",
+      "page": "https://apps.apple.com/cn/app/%E7%BE%8E%E5%9B%A2-%E9%97%AE%E7%BE%8E%E5%9B%A2-%E9%83%BD%E5%AE%89%E6%8E%92/id423084029",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/c1/16/65/c1166517-71bb-d29d-d36e-516765f8a537/AppIcon-0-0-1x_U007emarketing-0-0-0-7-0-0-sRGB-85-220.png/512x512bb.png"
+    },
+    {
+      "brand": "metro",
+      "publisher": "Shanghai MDL Commerce & Trading Co., Ltd.",
+      "page": "https://apps.apple.com/cn/app/%E9%BA%A6%E5%BE%B7%E9%BE%99/id1540021694",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/6a/d3/60/6ad360da-a50c-696f-4590-1f17fd6bb20f/AppIcon-0-0-1x_U007emarketing-0-5-85-220.png/512x512bb.png"
+    },
+    {
+      "brand": "migu-video",
+      "publisher": "咪咕视讯科技有限公司",
+      "page": "https://www.miguvideo.com/",
+      "asset": "https://www.miguvideo.com/favicon.ico"
+    },
+    {
+      "brand": "mijia-camera",
+      "publisher": "Beijing Xiaomi Co., Ltd",
+      "page": "https://apps.apple.com/cn/app/%E7%B1%B3%E5%AE%B6/id957323480",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/fb/86/a6/fb86a64b-a375-b630-b067-6b145e14b0fb/AppIcon-0-0-1x_U007emarketing-0-8-0-sRGB-0-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "mubu",
+      "publisher": "Shenzhen Shilihu Technology Co., Ltd.",
+      "page": "https://apps.apple.com/cn/app/id1214302139",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/d1/67/b0/d167b007-c855-5f9b-201a-ba25d134a44b/AppIcon-0-0-1x_U007epad-0-1-0-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "ncpa-classical",
+      "publisher": "National Centre for the Performing Arts",
+      "page": "https://apps.apple.com/cn/app/%E5%A4%A7%E5%89%A7%E9%99%A2-%E5%8F%A4%E5%85%B8/id522322732",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/c0/06/59/c0065908-2e72-5464-dcf9-8d0391a05f96/AppIcon-0-0-1x_U007emarketing-0-8-0-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "netease-cloud-gaming",
+      "publisher": "Guangzhou NetEase Computer System Co.Ltd",
+      "page": "https://apps.apple.com/cn/app/%E7%BD%91%E6%98%93%E4%BA%91%E6%B8%B8%E6%88%8F-%E5%BD%B1%E4%B9%8B%E5%88%83%E9%9B%B6%E4%B8%8A%E7%BA%BF%E5%8D%B3%E7%82%B9%E5%8D%B3%E7%8E%A9/id1600879249",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/c3/b5/a0/c3b5a081-b980-5449-2383-d0e44658e69f/AppIcon-0-0-1x_U007emarketing-0-8-0-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "netease-music",
+      "publisher": "杭州网易云音乐科技有限公司",
+      "page": "https://apps.apple.com/cn/app/id590338362",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/28/57/ce/2857cef1-4fbe-511a-6fd7-b1836c2cc07b/appIconNew-0-0-1x_U007epad-0-1-0-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "netease-uu",
+      "publisher": "Hangzhou Bobo Technology Co Ltd",
+      "page": "https://apps.apple.com/cn/app/id1319788668",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/ca/70/60/ca7060a7-16bc-2f4d-1460-a84a4d9fe0d5/AppIcon.release-0-0-1x_U007epad-0-1-0-85-220.png/512x512bb.jpg"
     },
     {
       "brand": "netflix",
@@ -86,10 +386,82 @@
       "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/4d/5d/8d/4d5d8d1d-8455-6c65-a256-f41ac98a2419/AppIcon-0-0-1x_U007epad-0-1-0-sRGB-0-85-220.png/512x512bb.png"
     },
     {
+      "brand": "processon",
+      "publisher": "Beijing Damaidi Information Technology Co.,Ltd.",
+      "page": "https://apps.apple.com/cn/app/id1564637971",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/a3/c5/b1/a3c5b142-3faf-6666-9cd5-aeb854bdc2a7/AppIcon-0-0-1x_U007epad-0-1-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "qianwen",
+      "publisher": "Shanghai Zhixin Puhui Technology Co., Ltd.",
+      "page": "https://apps.apple.com/cn/app/id6466733523",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/e0/32/db/e032db00-fd4a-d643-d874-2385c4c9f35f/AppIcon-0-0-1x_U007epad-0-1-0-sRGB-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "qingting",
+      "publisher": "Shanghai MarkPhone Culture Media Co., Ltd.",
+      "page": "https://apps.apple.com/cn/app/id506685538",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/35/fb/26/35fb26b9-8c8f-7fb2-c0e2-82c8b7743a1c/AppIcon-0-0-1x_U007epad-0-11-0-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "qq-music",
+      "publisher": "Tencent Technology (Shenzhen) Company Limited",
+      "page": "https://apps.apple.com/cn/app/id414603431",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/57/3a/60/573a605b-d554-1738-7fe0-23081e4f8c51/AppIcon-0-0-1x_U007epad-0-1-0-sRGB-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "qq-reading",
+      "publisher": "Tencent Mobile Games",
+      "page": "https://ubook.reader.qq.com/",
+      "asset": "https://qqreader-site-1252317822.file.myqcloud.com/qq-m/static/img/logo-transparent.b0d47dc.png"
+    },
+    {
+      "brand": "qq-svip",
+      "publisher": "腾讯科技（深圳）有限公司",
+      "page": "https://apps.apple.com/cn/app/qq/id444934666",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/e6/7f/b6/e67fb608-d48b-4366-e99f-ade6b3745728/AppIcon-1-0-0-1x_U007epad-0-1-0-sRGB-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "quark-drive",
+      "publisher": "Guangzhou Dongyue Information Technology Co., Ltd.",
+      "page": "https://apps.apple.com/cn/app/id6755949705",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/87/d7/03/87d70379-2a37-9f05-f29e-56e44e0b31a4/AppIcon-0-0-1x_U007epad-0-1-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "sams",
+      "publisher": "Walmart (China) Holding Co.,Ltd",
+      "page": "https://apps.apple.com/cn/app/%E5%B1%B1%E5%A7%86%E4%BC%9A%E5%91%98%E5%95%86%E5%BA%97/id818237113",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/98/b3/91/98b3912c-93a5-b2e4-4c48-db3e77301e15/AppIcon-1x_U007emarketing-0-5-0-85-220-0.png/512x512bb.png"
+    },
+    {
+      "brand": "shimo",
+      "publisher": "ChuXin Tec Co., Ltd.",
+      "page": "https://apps.apple.com/cn/app/id1013727678",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/db/0d/f8/db0df8bb-00b1-b680-9d67-61bf41e1638e/AppIcon-0-0-1x_U007emarketing-0-9-0-85-220.png/512x512bb.jpg"
+    },
+    {
       "brand": "spotify",
       "publisher": "Spotify",
       "page": "https://apps.apple.com/us/app/spotify-music-and-podcasts/id324684580",
       "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/e9/1f/74/e91f74f7-5d7a-8b48-94ce-ede900d61bff/AppIcon-0-0-1x_U007epad-0-1-0-0-85-220.png/512x512bb.png"
+    },
+    {
+      "brand": "tangdou",
+      "publisher": "小糖互娱(北京)科技有限公司",
+      "page": "https://apps.apple.com/cn/app/%E7%B3%96%E8%B1%86-%E5%85%A8%E6%B0%91%E5%B9%BF%E5%9C%BA%E8%88%9E%E8%A7%86%E9%A2%91%E7%A4%BE%E5%8C%BA/id1278869344",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/5a/83/e0/5a83e094-fc36-d83b-548e-e754e5496c4d/AppIcon-0-0-1x_U007emarketing-0-8-0-85-220.jpeg/512x512bb.jpg"
+    },
+    {
+      "brand": "taobao",
+      "publisher": "Zhejiang Taobao Network Co.,Ltd",
+      "page": "https://apps.apple.com/cn/app/%E6%B7%98%E5%AE%9D-%E4%B8%87%E8%83%BD%E7%9A%84%E6%B7%98%E5%AE%9D/id387682726",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/59/ef/48/59ef4826-1909-6c34-542d-9a55aae79c6c/AppIcon-0-0-1x_U007emarketing-0-10-0-85-220.png/512x512bb.png"
+    },
+    {
+      "brand": "taobao-instant",
+      "publisher": "Shanghai Rajax Information Technology Co., Ltd.",
+      "page": "https://apps.apple.com/cn/app/%E6%B7%98%E5%AE%9D%E9%97%AA%E8%B4%AD-%E7%82%B9%E5%A4%96%E5%8D%96%E6%9B%B4%E4%BC%98%E6%83%A0/id507161324",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/f0/1a/d1/f01ad175-4ece-fbc1-5763-fdeaadd3c9e9/AppIcon_new-0-0-1x_U007epad-0-1-0-85-220.png/512x512bb.png"
     },
     {
       "brand": "tencent",
@@ -98,10 +470,184 @@
       "asset": "https://vfiles.gtimg.cn/wuji_dashboard/xy/starter/4ea79867.png"
     },
     {
+      "brand": "tencent-comics",
+      "publisher": "腾讯科技(上海)有限公司",
+      "page": "https://apps.apple.com/cn/app/%E8%85%BE%E8%AE%AF%E5%8A%A8%E6%BC%AB/id569387346",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/63/5f/7f/635f7fbf-22c8-feb9-c8db-acda372d6ca3/AppIcon-0-1x_U007emarketing-0-8-0-0-sRGB-85-220-0.png/512x512bb.jpg"
+    },
+    {
+      "brand": "tencent-docs",
+      "publisher": "Tencent Technology (Shenzhen) Company Limited",
+      "page": "https://apps.apple.com/cn/app/id1370780836",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/2e/56/ee/2e56eefc-4ab1-9af0-8a41-96456f5a9f22/AppIcon-0-0-1x_U007epad-0-11-0-0-sRGB-GLES2_U002c0-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "tencent-meeting",
+      "publisher": "Tencent Technology (Shanghai) Company Limited",
+      "page": "https://apps.apple.com/cn/app/id1484048379",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/b0/e4/df/b0e4df4e-e732-9e1c-7adf-69249498e8e8/AppIcon-Release-0-0-1x_U007epad-0-9-0-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "tencent-sports",
+      "publisher": "腾讯科技（北京）有限公司",
+      "page": "https://apps.apple.com/cn/app/%E8%85%BE%E8%AE%AF%E4%BD%93%E8%82%B2/id570608623",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/41/f3/fe/41f3fe21-3bd4-fd86-3a60-f9900c058a2f/AppIcon-0-0-1x_U007epad-0-7-0-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "tencent-start",
+      "publisher": "Tencent Technology (Shenzhen) Company Limited",
+      "page": "https://apps.apple.com/cn/app/id6756707424",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/06/1b/f6/061bf6d6-41b0-65ef-eb1c-0c4eddfbb07f/AppIcon-0-0-1x_U007ephone-0-1-0-sRGB-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "tencent-weiyun",
+      "publisher": "Tencent Technology (Shanghai) Company Limited",
+      "page": "https://apps.apple.com/cn/app/id522700349",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/1f/09/a0/1f09a026-802c-8321-7978-e63414c17086/AppIcon-0-0-1x_U007emarketing-0-11-0-sRGB-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "tencent-xianfeng",
+      "publisher": "腾讯科技(上海)有限公司",
+      "page": "https://apps.apple.com/cn/app/%E8%85%BE%E8%AE%AF%E5%85%88%E9%94%8B-%E8%85%BE%E8%AE%AF%E5%AE%98%E6%96%B9%E4%BA%91%E6%B8%B8%E6%88%8F/id1511854315",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/ff/f2/cf/fff2cfcb-a600-9fa6-781e-cf70a7cf4d38/AppIcon-1x_U007emarketing-0-8-0-85-220-0.png/512x512bb.jpg"
+    },
+    {
+      "brand": "tianyi-drive",
+      "publisher": "E-surfing Digital Life Technology Co.,Ltd",
+      "page": "https://apps.apple.com/cn/app/id507944293",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/9f/9f/2d/9f9f2da8-723b-02c9-8bf6-92d01d9e9d8f/AppIcon-0-0-1x_U007emarketing-0-8-0-sRGB-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "ting-english",
+      "publisher": "QianYan Network",
+      "page": "https://apps.apple.com/cn/app/%E6%AF%8F%E6%97%A5%E8%8B%B1%E8%AF%AD%E5%90%AC%E5%8A%9B-%E6%AF%8F%E5%A4%A9%E6%9B%B4%E6%96%B0%E7%9A%84%E8%8B%B1%E8%AF%AD%E6%B3%9B%E5%90%AC%E8%B5%84%E6%BA%90%E5%BA%93/id570118289",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/a1/e8/a6/a1e8a65a-053e-5e78-cacf-f43a81002b41/app_icon_ting_en-0-0-1x_U007epad-0-1-0-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "tongcheng",
+      "publisher": "Tongcheng Network Technology Co., Ltd.",
+      "page": "https://apps.apple.com/cn/app/%E5%90%8C%E7%A8%8B%E6%97%85%E8%A1%8C-%E8%AE%A2%E9%85%92%E5%BA%97%E6%9C%BA%E7%A5%A8%E7%81%AB%E8%BD%A6%E7%A5%A8-%E4%BD%8E%E4%BB%B7%E6%89%93%E8%BD%A6/id475966832",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/9f/e2/38/9fe238a0-8bbd-6624-b00c-db517e43418a/AppIcon-0-0-1x_U007emarketing-0-8-0-85-220.png/512x512bb.png"
+    },
+    {
+      "brand": "we-sing",
+      "publisher": "Tencent Technology (Shanghai) Company Limited",
+      "page": "https://apps.apple.com/cn/app/id910513149",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/07/05/7d/07057dfe-8235-2886-f5e6-48fac46f1928/AppIcon-0-0-1x_U007emarketing-0-11-0-0-sRGB-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "weibo",
+      "publisher": "SINA Corporation",
+      "page": "https://apps.apple.com/cn/app/%E5%BE%AE%E5%8D%9A/id350962117",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/6f/b1/7b/6fb17bfa-f66e-aa51-88df-6237108cbd9b/WeiboAppIcon-0-0-1x_U007epad-0-1-0-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "weread",
+      "publisher": "Tencent Technology (Shenzhen) Company Limited",
+      "page": "https://apps.apple.com/cn/app/id952059546",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/03/8e/f6/038ef6ec-c9cc-47db-a0f3-f29e4394cf8f/AppIcon-0-0-1x_U007epad-0-11-0-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "wps",
+      "publisher": "Zhuhai Kingsoft Office Software Co.,Ltd",
+      "page": "https://apps.apple.com/cn/app/id599852710",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/bd/76/a6/bd76a693-36f5-5dad-297e-22ef75a92fed/AppIcon-0-0-1x_U007epad-0-1-0-sRGB-0-0-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "xiaomi-cloud",
+      "publisher": "小米",
+      "page": "https://i.mi.com/",
+      "asset": "https://cdn.web-global.fds.api.mi-img.com/mcfe--fds-static-files/micloud-images/favicon.ico"
+    },
+    {
+      "brand": "xiaoyuan-ai",
+      "publisher": "广州九举科技有限公司",
+      "page": "https://apps.apple.com/cn/app/%E5%B0%8F%E7%8C%BFai-%E5%8E%9F-%E5%B0%8F%E7%8C%BF%E5%8F%A3%E7%AE%97-%E6%A3%80%E6%9F%A5%E4%BD%9C%E4%B8%9A%E7%A5%9E%E5%99%A8/id1325419855",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/fd/39/a1/fd39a152-7ec4-5d92-79a6-04fa46943efe/AppIcon-0-0-1x_U007epad-0-1-0-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "ximalaya",
+      "publisher": "Xi Da (Shanghai) Network Technology Co., Ltd.",
+      "page": "https://apps.apple.com/cn/app/id876336838",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/45/fe/27/45fe2735-b0aa-1321-f173-45b5243972c6/AppIcon-0-0-1x_U007emarketing-0-8-0-sRGB-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "xingtu",
+      "publisher": "Shenzhen Lianmeng Technology Co.Ltd.",
+      "page": "https://apps.apple.com/cn/app/id1500526240",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/90/ef/19/90ef19bc-ac38-e811-3f5d-c8b28cdd2e3f/AppIcon-0-0-1x_U007emarketing-0-8-0-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "xiqu-duoduo",
+      "publisher": "北京电音多多科技有限公司",
+      "page": "https://apps.apple.com/cn/app/%E6%88%8F%E6%9B%B2%E5%A4%9A%E5%A4%9A-%E8%B1%AB%E5%89%A7%E4%BA%8C%E4%BA%BA%E8%BD%AC%E7%9B%B8%E5%A3%B0%E5%A4%A7%E5%85%A8/id1468089343",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/25/f7/45/25f74581-6317-22db-ef49-7632ab2d9617/AppIcon-0-0-1x_U007emarketing-0-8-0-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "xunlei",
+      "publisher": "Shenzhen Xunlei Network Technology Co., Ltd.",
+      "page": "https://apps.apple.com/cn/app/id1503466530",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/cd/33/bd/cd33bd66-5e17-3e6c-079f-77fff88e9139/AppIcon-0-0-1x_U007emarketing-0-8-0-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "yinxiang",
+      "publisher": "Beijing Yinxiang Biji Technologies Co., Ltd.",
+      "page": "https://apps.apple.com/cn/app/id1356054761",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/07/6b/9b/076b9be2-56e4-39a5-a4db-baee06159468/AppIcon-0-0-1x_U007epad-0-1-0-sRGB-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "youdao-dict",
+      "publisher": "北京网易有道计算机系统有限公司",
+      "page": "https://apps.apple.com/cn/app/%E7%BD%91%E6%98%93%E6%9C%89%E9%81%93%E8%AF%8D%E5%85%B8-%E4%B8%93%E4%B8%9A%E6%9F%A5%E8%AF%8D%E7%BF%BB%E8%AF%91%E5%AD%A6%E4%B9%A0%E5%8A%A9%E6%89%8B/id353115739",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/57/83/b8/5783b8a5-0482-a9ae-01f1-11ea63cc459d/AppIcon-0-0-1x_U007epad-0-11-0-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "youdao-note",
+      "publisher": "Hangzhou NetEase Bamboo Mail Technology Co., Ltd.",
+      "page": "https://apps.apple.com/cn/app/id450748070",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/81/a1/9b/81a19bfb-552d-4615-3202-612fb6eb9015/AppIcon-0-1x_U007emarketing-0-11-0-85-220-0.png/512x512bb.jpg"
+    },
+    {
+      "brand": "youku",
+      "publisher": "Youku.com Inc.",
+      "page": "https://apps.apple.com/cn/app/id336141475",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/cb/e7/b1/cbe7b1f6-81e1-0acc-4e93-4cf752459431/AppIcon-0-0-1x_U007emarketing-0-9-0-85-220.png/512x512bb.jpg"
+    },
+    {
       "brand": "youtube",
       "publisher": "Google LLC",
       "page": "https://apps.apple.com/us/app/youtube/id544007664",
       "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/14/ce/45/14ce45d8-5ca6-1dfa-c4a5-4660061cf213/logo_youtube_2024_q4_color-0-0-1x_U007emarketing-0-0-0-7-0-0-0-85-220.png/512x512bb.png"
+    },
+    {
+      "brand": "yuque",
+      "publisher": "Ant Financial Hangzhou Network Technology Co., Ltd.",
+      "page": "https://apps.apple.com/cn/app/id1601937668",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/ad/37/98/ad3798bf-ca68-42af-fe7d-0aa5ddc58d72/AppIcon-0-0-1x_U007emarketing-0-8-0-0-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "zhihu",
+      "publisher": "Beijing Zhizhetianxia Technology Co., Ltd.",
+      "page": "https://apps.apple.com/cn/app/id432274380",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/91/52/c8/9152c88e-e9a0-0035-c4cb-82208ac87412/AppIcon-0-0-1x_U007emarketing-0-7-0-sRGB-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "zhipu-qingyan",
+      "publisher": "Beijing Knowledge Atlas Technology Joint Stock Company Limited",
+      "page": "https://apps.apple.com/cn/app/id6450893458",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/fa/60/3d/fa603d99-0dc2-3cb4-4e33-bd43a67c44c4/AppIcon-0-0-1x_U007epad-0-1-0-85-220.png/512x512bb.jpg"
+    },
+    {
+      "brand": "zhixing",
+      "publisher": "Shanghai Suanya Information Technology Co., Ltd.",
+      "page": "https://apps.apple.com/cn/app/%E6%99%BA%E8%A1%8C%E7%81%AB%E8%BD%A6%E7%A5%A8-%E9%93%81%E8%B7%AF%E9%AB%98%E9%93%81%E8%AE%A2%E7%A5%A8/id651323845",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/40/73/88/40738881-2deb-5ebf-6436-f9b9d73a0089/AppIcon-0-0-1x_U007epad-0-1-85-220.png/512x512bb.png"
+    },
+    {
+      "brand": "zuoyebang",
+      "publisher": "广州极目未来文化科技有限公司",
+      "page": "https://apps.apple.com/cn/app/%E4%BD%9C%E4%B8%9A%E5%B8%AE-%E5%8E%9F%E9%A2%98%E7%B2%BE%E8%AE%B2-%E6%95%99%E6%9D%90%E5%90%8C%E6%AD%A5%E5%AD%A6/id803781859",
+      "asset": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/fd/94/af/fd94afef-6c2f-cf56-f965-f733e59a2693/AppIcon-0-0-1x_U007epad-0-1-0-0-85-220.png/512x512bb.jpg"
     }
   ]
 }
