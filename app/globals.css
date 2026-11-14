@@ -1430,7 +1430,7 @@ dd {
   --inset: 3px;
   z-index: 1;
 }
-.walletHome .deckCard {
+:is(.walletHome, .galleryStage) .deckCard {
   z-index: calc(7 - var(--level));
   border-radius: 25px;
 }
@@ -1453,25 +1453,25 @@ dd {
   color: #fff;
   text-shadow: 0 1px 4px #10213355;
 }
-.walletHome .deckCard.front {
+:is(.walletHome, .galleryStage) .deckCard.front {
   padding: 20px 23px;
   box-shadow:
     inset 0 1px 1px #ffffff77,
     0 -2px 8px #10263827,
     0 11px 19px -12px #20324d88;
 }
-.walletHome .deckCard.front::before {
+:is(.walletHome, .galleryStage) .deckCard.front::before {
   content: "";
   position: absolute;
   inset: 0;
   pointer-events: none;
   background: linear-gradient(0deg, #10283d35, transparent 54%);
 }
-.walletHome .front .platformIcon {
+:is(.walletHome, .galleryStage) .front .platformIcon {
   width: 38px;
   height: 38px;
 }
-.walletHome .front .heroAmount strong {
+:is(.walletHome, .galleryStage) .front .heroAmount strong {
   display: flex;
   align-items: baseline;
   gap: 3px;
@@ -1479,7 +1479,7 @@ dd {
   font-weight: 620;
   letter-spacing: -0.055em;
 }
-.walletHome .front .heroAmount .amountUnknown {
+:is(.walletHome, .galleryStage) .front .heroAmount .amountUnknown {
   font-size: 22px;
 }
 .currencySign {
@@ -1488,7 +1488,7 @@ dd {
   font-weight: 550;
 }
 
-.walletHome .deckChip {
+:is(.walletHome, .galleryStage) .deckChip {
   top: 23px;
 }
 .walletHome .deckNav {
@@ -1551,7 +1551,7 @@ dd {
     --face: clamp(190px, 27svh, 247px);
     --inset: 2.4px;
   }
-  .walletHome .deckCard {
+  :is(.walletHome, .galleryStage) .deckCard {
     border-radius: 21px;
   }
   .walletHome .deckCard.behind {
@@ -1561,13 +1561,13 @@ dd {
     width: 28px;
     height: 28px;
   }
-  .walletHome .deckCard.front {
+  :is(.walletHome, .galleryStage) .deckCard.front {
     padding: 17px 18px 18px;
   }
-  .walletHome .deckChip {
+  :is(.walletHome, .galleryStage) .deckChip {
     top: 19px;
   }
-  .walletHome .heroDate b {
+  :is(.walletHome, .galleryStage) .heroDate b {
     font-size: 16px;
   }
   .walletHome .overviewSide {
@@ -1595,4 +1595,30 @@ dd {
 .settingRow.catalogEntry {
   color: inherit;
   text-decoration: none;
+}
+
+.withGallery {
+  position: relative;
+  min-height: 44px;
+}
+.deckGalleryLink,
+.singleGalleryLink {
+  color: #595366;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+}
+.deckGalleryLink {
+  position: absolute;
+  inset-inline-end: 0;
+  top: 0;
+  height: 100%;
+  display: inline-flex;
+  align-items: center;
+  padding-inline: 4px;
+}
+.singleGalleryLink {
+  display: flex;
+  justify-content: flex-end;
+  padding: 10px 4px;
 }

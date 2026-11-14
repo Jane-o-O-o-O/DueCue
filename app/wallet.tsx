@@ -19,7 +19,8 @@ import {
 } from "lucide-react";
 import { catalog } from "../public/catalog-data.js";
 import { brands, identifyBrand } from "../public/brands.js";
-import { BrandIcon, emblemArtwork } from "./brand-icon";
+import { BrandIcon } from "./brand-icon";
+import { WalletCard } from "./wallet-card";
 import {
   examples,
   iso,
@@ -27,7 +28,6 @@ import {
   daysLeft,
   money,
   calendarFile,
-  symbols,
   Entry,
   shift,
 } from "@/lib/records";
@@ -68,59 +68,6 @@ function Brand() {
       </span>
       <b>有期</b>
     </div>
-  );
-}
-function CardArt({ slug }: { slug: string }) {
-  const emblem = emblemArtwork(slug);
-  if (emblem) {
-    return (
-      <img
-        className="cardArt officialArt"
-        src={emblem}
-        alt=""
-        aria-hidden="true"
-      />
-    );
-  }
-  const isVideo = [
-    "tencent",
-    "mango",
-    "netflix",
-    "disney",
-    "youtube",
-    "bilibili",
-    "iqiyi",
-  ].includes(slug);
-  return (
-    <svg aria-hidden="true" viewBox="0 0 250 240" className="cardArt">
-      <g
-        transform="translate(146 119) rotate(-18)"
-        fill="none"
-        stroke="currentColor"
-      >
-        {Array.from({ length: 18 }, (_, i) => {
-          const scale = 0.44 + i * 0.063;
-          const transform = `translate(${i * 0.6} ${-i * 0.65}) rotate(${i * 1.15}) scale(${scale})`;
-          return isVideo ? (
-            <path
-              key={i}
-              transform={transform}
-              d="M-61 -87 Q-61 -103 -47 -95 L93 -13 Q109 -4 93 6 L-46 89 Q-61 98 -61 81 Z"
-            />
-          ) : (
-            <rect
-              key={i}
-              transform={transform}
-              x="-73"
-              y="-73"
-              width="146"
-              height="146"
-              rx={slug === "spotify" || slug === "chatgpt" ? 67 : 35}
-            />
-          );
-        })}
-      </g>
-    </svg>
   );
 }
 function download(e: Entry) {
@@ -774,21 +721,18 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
                             const n = deckSize - 1 - j;
                             const r = items[(index + n) % items.length];
                             const slug = identifyBrand(r.name);
-                            const b = (brands as any)[slug];
                             return (
-                              <button
+                              <WalletCard
                                 key={r.id}
-                                data-motion-id={r.id}
-                                className={
-                                  "deckCard" + (n ? " behind" : " front")
-                                }
-                                style={
-                                  {
-                                    "--level": n,
-                                    "--slot": j,
-                                    "--card": b.dark,
-                                    "--tint": b.light,
-                                  } as React.CSSProperties
+                                motionId={r.id}
+                                entry={r}
+                                slug={slug}
+                                level={n}
+                                slot={j}
+                                dateCaption={n ? "" : due(r.date, today)}
+                                dateText={n ? "" : shortDate(r.date)}
+                                label={
+                                  r.name + (n ? "，切换到此卡" : "，打开详情")
                                 }
                                 onClick={() => {
                                   if (Date.now() - lastSwipe.current < 450)
@@ -796,52 +740,7 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
                                   if (n) moveCard(n);
                                   else select(r);
                                 }}
-                                aria-label={
-                                  r.name + (n ? "，切换到此卡" : "，打开详情")
-                                }
-                              >
-                                <span className="deckName">
-                                  <BrandIcon name={r.name} />
-                                  <b>{r.name}</b>
-                                </span>
-                                {n > 0 && (
-                                  <span className="foldCycle">{r.cycle}</span>
-                                )}
-                                {n === 0 && (
-                                  <>
-                                    <span className="deckChip">{r.cycle}</span>
-                                    <CardArt slug={slug} />
-                                    <span className="heroFoot">
-                                      <span className="heroAmount">
-                                        <small>{r.kind}</small>
-                                        <strong
-                                          className={
-                                            r.amount === ""
-                                              ? "amountUnknown"
-                                              : undefined
-                                          }
-                                        >
-                                          {r.amount === "" ? (
-                                            money(r)
-                                          ) : (
-                                            <>
-                                              <span className="currencySign">
-                                                {symbols[r.currency] ||
-                                                  r.currency}
-                                              </span>
-                                              {Number(r.amount).toFixed(2)}
-                                            </>
-                                          )}
-                                        </strong>
-                                      </span>
-                                      <span className="heroDate">
-                                        <small>{due(r.date, today)}</small>
-                                        <b>{shortDate(r.date)}</b>
-                                      </span>
-                                    </span>
-                                  </>
-                                )}
-                              </button>
+                              />
                             );
                           })}
                           <div
@@ -853,7 +752,7 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
                         </div>
                       </div>
                       {items.length > 1 && (
-                        <div className="deckNav">
+                        <div className="deckNav withGallery">
                           <button
                             aria-label="上一张卡"
                             onClick={() => moveCard(-1)}
@@ -875,7 +774,15 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
                           >
                             <ChevronRight size={17} />
                           </button>
+                          <a className="deckGalleryLink" href="/cards">
+                            全部卡面
+                          </a>
                         </div>
+                      )}
+                      {items.length === 1 && (
+                        <a className="singleGalleryLink" href="/cards">
+                          全部卡面
+                        </a>
                       )}
                     </>
                   ) : (
@@ -1000,6 +907,10 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
                 )}
               </section>
               <section className="section">
+                <a className="settingRow catalogEntry" href="/cards">
+                  <b>全部卡面</b>
+                  <ChevronRight size={18} aria-hidden="true" />
+                </a>
                 <a className="settingRow catalogEntry" href="/brands">
                   <span>
                     <b>国内会员目录</b>

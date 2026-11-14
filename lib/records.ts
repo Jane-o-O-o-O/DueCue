@@ -117,7 +117,7 @@ export function daysLeft(date: string, today: string) {
       86400000,
   );
 }
-export function money(e: Entry) {
+export function money(e: Pick<Entry, "amount" | "currency">) {
   return e.amount === ""
     ? "金额待确认"
     : (symbols[e.currency] || e.currency) + Number(e.amount).toFixed(2);
