@@ -65,9 +65,14 @@ export default function Directory() {
   );
   return (
     <main className="catalogPage">
-      <a className="catalogBack" href="/">
-        <ChevronLeft size={18} /> 卡包
-      </a>
+      <nav className="directoryTopNav" aria-label="页面导航">
+        <a className="catalogBack" href="/">
+          <ChevronLeft size={18} /> 卡包
+        </a>
+        <a className="catalogBack" href="/cards">
+          全部卡面
+        </a>
+      </nav>
       <header className="catalogHeader">
         <div>
           <h1>国内会员目录</h1>
