@@ -328,6 +328,10 @@ h1 {
   width: 47%;
   height: 70%;
 }
+.cardArt.officialArt[data-tone="light"] {
+  filter: contrast(0.4) brightness(1.85);
+  opacity: 0.43;
+}
 .heroFoot {
   position: relative;
   z-index: 1;

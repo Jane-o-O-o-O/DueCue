@@ -1,14 +1,50 @@
-import type { CSSProperties, MouseEventHandler } from "react";
+import {
+  useCallback,
+  useState,
+  type CSSProperties,
+  type MouseEventHandler,
+} from "react";
 import { brands } from "../public/brands.js";
 import { BrandIcon, emblemArtwork } from "./brand-icon";
 import { type Entry, money, symbols } from "@/lib/records";
 
+// These marks share the hue of their card. Lift the ink only on the large watermark.
+const lowContrastEmblems = new Set([
+  "2bulu",
+  "gaoding",
+  "hema",
+  "iqiyi",
+  "jd",
+  "kuwo",
+  "meitu",
+  "netease-cloud-gaming",
+  "netflix",
+  "qingting",
+  "taobao",
+  "weibo",
+  "weread",
+  "xunlei",
+  "zhihu",
+  "zhipu-qingyan",
+]);
+
 function CardArt({ slug, lazy }: { slug: string; lazy: boolean }) {
   const emblem = emblemArtwork(slug);
-  if (emblem) {
+  const [unavailable, setUnavailable] = useState<string>();
+  const checkImage = useCallback(
+    (img: HTMLImageElement | null) => {
+      if (img?.complete && img.naturalWidth === 0) setUnavailable(emblem);
+    },
+    [emblem],
+  );
+  if (emblem && unavailable !== emblem) {
     return (
       <img
+        key={emblem}
+        ref={checkImage}
         className="cardArt officialArt"
+        data-tone={lowContrastEmblems.has(slug) ? "light" : undefined}
+        onError={() => setUnavailable(emblem)}
         src={emblem}
         loading={lazy ? "lazy" : undefined}
         alt=""
