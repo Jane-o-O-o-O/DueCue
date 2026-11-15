@@ -100,6 +100,18 @@ main {
   font-weight: 760;
   letter-spacing: -0.05em;
 }
+.brandEnglish {
+  font-size: 0.7em;
+  font-weight: 610;
+  letter-spacing: -0.025em;
+  color: #5c5774;
+}
+.mobileBrandTitle {
+  display: none;
+}
+.brand b {
+  white-space: nowrap;
+}
 .brandMark {
   width: 34px;
   height: 34px;
@@ -1177,6 +1189,16 @@ dd {
   }
 }
 @media (max-width: 680px) {
+  .desktopWalletTitle {
+    display: none;
+  }
+  .mobileBrandTitle {
+    display: inline;
+    white-space: nowrap;
+  }
+  .mobileBrandTitle .brandEnglish {
+    font-size: 16px;
+  }
   .masthead,
   .desktopNav {
     display: none;

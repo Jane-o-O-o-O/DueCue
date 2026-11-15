@@ -132,7 +132,7 @@ export function calendarFile(e: Entry) {
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//Youqi//Wallet//ZH",
+    "PRODID:-//DueCue//Wallet//ZH",
     "BEGIN:VEVENT",
     "UID:" + e.id + "@youqi",
     "DTSTAMP:" +

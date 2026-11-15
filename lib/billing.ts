@@ -66,7 +66,7 @@ export async function checkoutUrl(
     biz_content: JSON.stringify({
       out_trade_no: id,
       total_amount: price,
-      subject: "有期 · " + days + " 天使用权",
+      subject: "知期 DueCue · " + days + " 天使用权",
       product_code: "QUICK_WAP_WAY",
     }),
   };

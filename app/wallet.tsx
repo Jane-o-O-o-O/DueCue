@@ -60,13 +60,25 @@ function due(s: string, t: string) {
         ? "已过 " + -n + " 天"
         : n + " 天后";
 }
+function BrandName() {
+  return (
+    <>
+      知期{" "}
+      <span className="brandEnglish" lang="en">
+        DueCue
+      </span>
+    </>
+  );
+}
 function Brand() {
   return (
     <div className="brand">
       <span className="brandMark">
         <Layers3 size={25} strokeWidth={2.6} />
       </span>
-      <b>有期</b>
+      <b>
+        <BrandName />
+      </b>
     </div>
   );
 }
@@ -580,7 +592,18 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
       >
         <header className="pageHeader">
           <div className="pageTitle motionReveal" key={tab}>
-            <h1>{pageTitles[tab]}</h1>
+            <h1>
+              {tab === "overview" ? (
+                <>
+                  <span className="desktopWalletTitle">{pageTitles[tab]}</span>
+                  <span className="mobileBrandTitle">
+                    <BrandName />
+                  </span>
+                </>
+              ) : (
+                pageTitles[tab]
+              )}
+            </h1>
             {demo && tab !== "settings" && (
               <span className="demoLabel">示例</span>
             )}
