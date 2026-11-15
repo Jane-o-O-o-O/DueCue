@@ -2,11 +2,12 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import "./motion.css";
 export const metadata: Metadata = {
-  title: "有期 · 订阅手账",
+  title: "知期 DueCue · 订阅手账",
+  applicationName: "知期 DueCue",
   description: "把订阅、续费和到期日收进同一个卡包",
   manifest: "/manifest.webmanifest",
   icons: { icon: "/icon-192.png", apple: "/icon-192.png" },
-  appleWebApp: { capable: true, title: "有期", statusBarStyle: "default" },
+  appleWebApp: { capable: true, title: "知期", statusBarStyle: "default" },
 };
 export const viewport: Viewport = {
   width: "device-width",
