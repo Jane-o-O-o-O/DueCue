@@ -60,28 +60,6 @@ function due(s: string, t: string) {
         ? "已过 " + -n + " 天"
         : n + " 天后";
 }
-function BrandName() {
-  return (
-    <>
-      知期{" "}
-      <span className="brandEnglish" lang="en">
-        DueCue
-      </span>
-    </>
-  );
-}
-function Brand() {
-  return (
-    <div className="brand">
-      <span className="brandMark">
-        <Layers3 size={25} strokeWidth={2.6} />
-      </span>
-      <b>
-        <BrandName />
-      </b>
-    </div>
-  );
-}
 function download(e: Entry) {
   const url = URL.createObjectURL(
     new Blob([calendarFile(e)], { type: "text/calendar;charset=utf-8" }),
@@ -581,7 +559,9 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
     <div className="shell">
       <header className="masthead">
         <div className="mastInner">
-          <Brand />
+          <a className="homeIcon" href="/" aria-label="卡包首页">
+            <img src="/apple-touch-icon.png" width="34" height="34" alt="" />
+          </a>
           {navigation("desktop")}
         </div>
       </header>
@@ -592,18 +572,7 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
       >
         <header className="pageHeader">
           <div className="pageTitle motionReveal" key={tab}>
-            <h1>
-              {tab === "overview" ? (
-                <>
-                  <span className="desktopWalletTitle">{pageTitles[tab]}</span>
-                  <span className="mobileBrandTitle">
-                    <BrandName />
-                  </span>
-                </>
-              ) : (
-                pageTitles[tab]
-              )}
-            </h1>
+            <h1>{pageTitles[tab]}</h1>
             {demo && tab !== "settings" && (
               <span className="demoLabel">示例</span>
             )}

@@ -73,7 +73,6 @@ main {
   align-items: center;
   justify-content: space-between;
 }
-.brand,
 .desktopNav,
 .desktopNav button,
 .pageHeader,
@@ -94,36 +93,15 @@ main {
   display: flex;
   align-items: center;
 }
-.brand {
-  gap: 9px;
-  font-size: 22px;
-  font-weight: 760;
-  letter-spacing: -0.05em;
-}
-.brandEnglish {
-  font-size: 0.7em;
-  font-weight: 610;
-  letter-spacing: -0.025em;
-  color: #5c5774;
-}
-.mobileBrandTitle {
-  display: none;
-}
-.brand b {
-  white-space: nowrap;
-}
-.brandMark {
-  width: 34px;
-  height: 34px;
+.homeIcon {
   display: grid;
   place-items: center;
-  border-radius: 11px;
-  color: white;
-  background: linear-gradient(145deg, #8780ed, #564dbe);
-  box-shadow: inset 0 1px 0 #ffffff88;
+  width: 44px;
+  height: 44px;
 }
-.brandMark svg {
-  width: 22px;
+.homeIcon img {
+  display: block;
+  border-radius: 8px;
 }
 .desktopNav {
   gap: 4px;
@@ -1189,16 +1167,6 @@ dd {
   }
 }
 @media (max-width: 680px) {
-  .desktopWalletTitle {
-    display: none;
-  }
-  .mobileBrandTitle {
-    display: inline;
-    white-space: nowrap;
-  }
-  .mobileBrandTitle .brandEnglish {
-    font-size: 16px;
-  }
   .masthead,
   .desktopNav {
     display: none;
