@@ -4,3 +4,7 @@ declare namespace Cloudflare {
     BUCKET?: R2Bucket;
   }
 }
+
+interface ImportMetaEnv {
+  readonly VITE_DUECUE_ACCOUNTS?: string;
+}

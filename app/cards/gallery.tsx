@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { MouseEventHandler } from "react";
 import { ChevronLeft, ChevronRight, Grid2X2, Search, X } from "lucide-react";
 import { brands, searchKey } from "../../public/brands.js";
@@ -59,6 +59,7 @@ const styles = ordered.map((slug) => {
   return { slug, name: brand.name, category, terms };
 });
 type CardStyle = (typeof styles)[number];
+const byGallerySlug = new Set(styles.map(item => item.slug));
 const categories = [...new Set(styles.map((s) => s.category))];
 const genericCount = styles.filter((s) => s.category === "通用卡面").length;
 
@@ -93,10 +94,16 @@ function ExampleCard({
 }
 
 export default function CardGallery() {
+  const [fromSettings, setFromSettings] = useState(false);
+  useEffect(() => { setFromSettings(new URLSearchParams(location.search).get("from") === "settings"); }, []);
   const [query, setQuery] = useState(""),
     [category, setCategory] = useState("全部"),
     [dense, setDense] = useState(false);
   const [selection, setSelection] = useState<string | null>(null);
+  useEffect(() => {
+    const slug = new URLSearchParams(window.location.search).get("card");
+    if (slug && byGallerySlug.has(slug)) setSelection(slug);
+  }, []);
   const opener = useRef<HTMLElement | null>(null),
     dialog = useRef<DialogControl>(null);
   const touch = useRef<{ x: number; y: number } | null>(null);
@@ -120,11 +127,11 @@ export default function CardGallery() {
   return (
     <main className="cardGallery">
       <nav className="galleryTop" aria-label="页面导航">
-        <a href="/">
+        <a href={fromSettings ? "/#settings" : "/"}>
           <ChevronLeft size={17} />
-          卡包
+          {fromSettings ? "设置" : "卡包"}
         </a>
-        <a href="/brands">会员目录</a>
+        <a href={fromSettings ? "/brands?from=settings" : "/brands"}>会员目录</a>
       </nav>
       <header className="galleryHeader">
         <h1>全部卡面</h1>

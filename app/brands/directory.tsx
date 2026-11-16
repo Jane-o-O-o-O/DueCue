@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronLeft, Plus, Search, ExternalLink } from "lucide-react";
 import { catalog } from "../../public/catalog-data.js";
 import { searchKey } from "../../public/brands.js";
@@ -55,6 +55,8 @@ const indexed = catalog.map((item) => ({
 }));
 
 export default function Directory() {
+  const [fromSettings, setFromSettings] = useState(false);
+  useEffect(() => { setFromSettings(new URLSearchParams(location.search).get("from") === "settings"); }, []);
   const [filter, setFilter] = useState("全部"),
     [query, setQuery] = useState("");
   const needle = norm(query);
@@ -66,10 +68,10 @@ export default function Directory() {
   return (
     <main className="catalogPage">
       <nav className="directoryTopNav" aria-label="页面导航">
-        <a className="catalogBack" href="/">
-          <ChevronLeft size={18} /> 卡包
+        <a className="catalogBack" href={fromSettings ? "/#settings" : "/"}>
+          <ChevronLeft size={18} /> {fromSettings ? "设置" : "卡包"}
         </a>
-        <a className="catalogBack" href="/cards">
+        <a className="catalogBack" href={fromSettings ? "/cards?from=settings" : "/cards"}>
           全部卡面
         </a>
       </nav>
