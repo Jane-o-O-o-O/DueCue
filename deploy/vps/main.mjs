@@ -1,6 +1,6 @@
 import {registerHooks} from 'node:module';
 import {createServer} from 'node:http';
-import {createHash,timingSafeEqual} from 'node:crypto';
+import {identity,accountRoute} from './accounts.mjs';
 import {readdirSync,createReadStream} from 'node:fs';
 import {stat} from 'node:fs/promises';
 import {join,extname} from 'node:path';
@@ -17,11 +17,6 @@ registerHooks({resolve(specifier, context, nextResolve) {
 const {env} = await import('./bindings.mjs');
 const {default: app} = await import('./dist/server/index.js');
 const origin = new URL(process.env.PUBLIC_ORIGIN || 'https://duecue.jane-zz.online').origin;
-const username = process.env.DUECUE_USERNAME || 'owner';
-const password = process.env.DUECUE_PASSWORD;
-if (!password || password.length < 20) throw Error('Set a private DUECUE_PASSWORD with at least 20 characters');
-const hash = text => createHash('sha256').update(text).digest();
-const expected = hash('Basic '+Buffer.from(username+':'+password).toString('base64'));
 const files = new Map();
 const staticRoot = fileURLToPath(new URL('./dist/client/',import.meta.url));
 function indexFiles(dir='') {
@@ -36,6 +31,8 @@ indexFiles();
 const mime = {'.js':'application/javascript','.mjs':'application/javascript','.css':'text/css','.png':'image/png',
   '.svg':'image/svg+xml','.webmanifest':'application/manifest+json','.ico':'image/x-icon',
   '.json':'application/json','.woff2':'font/woff2','.wasm':'application/wasm','.txt':'text/plain','.gz':'application/gzip'};
+const installAssets = new Set(['/manifest.webmanifest','/manifest-en.webmanifest','/apple-touch-icon.png',
+  '/favicon.ico','/icon-192.png','/icon-512.png']);
 function reply(res,status,text,headers={}) {
   res.writeHead(status,{'Content-Type':'text/plain; charset=utf-8','Cache-Control':'no-store',...headers});
   res.end(text);
@@ -47,9 +44,18 @@ async function handle(req,res) {
   if (req.method === 'GET' && url.pathname === '/healthz') {
     env.DB.prepare('SELECT 1').first(); return reply(res,200,'ok\n');
   }
+  if (url.pathname === '/login' || url.pathname === '/account' || url.pathname.startsWith('/auth/')) {
+    return accountRoute(req,res,url);
+  }
   const callback = req.method === 'POST' && url.pathname === '/api/alipay/notify';
-  if (!callback && !timingSafeEqual(expected,hash(req.headers.authorization || ''))) {
-    return reply(res,401,'请登录知期',{'WWW-Authenticate':'Basic realm="DueCue", charset="UTF-8"'});
+  const user = callback ? null : identity(req);
+  const publicInstallAsset = installAssets.has(url.pathname) && ['GET','HEAD'].includes(req.method) && files.has(url.pathname);
+  if (!callback && !user && !publicInstallAsset) {
+    if (req.method === 'GET' && ['/','/cards','/brands'].includes(url.pathname)) {
+      res.writeHead(303,{Location:'/login?next='+encodeURIComponent(url.pathname),'Cache-Control':'no-store'});
+      return res.end();
+    }
+    return reply(res,401,'请登录知期');
   }
   const file = files.get(url.pathname);
   if (file && (req.method === 'GET' || req.method === 'HEAD')) {
@@ -65,7 +71,7 @@ async function handle(req,res) {
     'next-router-state-tree','next-router-prefetch','next-url']) {
     if (typeof req.headers[name]==='string') headers.set(name,req.headers[name]);
   }
-  if (!callback) headers.set('oai-authenticated-user-id',username);
+  if (!callback) headers.set('oai-authenticated-user-id',user);
   const init = {method:req.method,headers};
   if (!['GET','HEAD'].includes(req.method)) {
     const chunks=[]; let size=0;

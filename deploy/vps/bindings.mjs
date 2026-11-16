@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 const dataDirectory = process.env.DUECUE_DATA || './data';
 mkdirSync(dataDirectory, {recursive:true});
-const sqlite = new DatabaseSync(join(dataDirectory, 'duecue.sqlite'));
+export const sqlite = new DatabaseSync(join(dataDirectory, 'duecue.sqlite'));
 sqlite.exec('PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000; PRAGMA foreign_keys=ON;');
 const schemaVersion = sqlite.prepare('PRAGMA user_version').get().user_version;
 if (schemaVersion === 0) {

@@ -22,6 +22,7 @@ services:
       - "127.0.0.1:3000:3000"
     volumes:
       - ./main.mjs:/app/main.mjs:ro
+      - ./accounts.mjs:/app/accounts.mjs:ro
       - ./bindings.mjs:/app/bindings.mjs:ro
       - ./package.json:/app/package.json:ro
       - ./schema.sql:/app/schema.sql:ro
