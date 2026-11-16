@@ -1,5 +1,6 @@
 import {registerHooks} from 'node:module';
 import {createServer} from 'node:http';
+import {handleCardRequests} from './card-requests.mjs';
 import {identity,accountRoute} from './accounts.mjs';
 import {readdirSync,createReadStream} from 'node:fs';
 import {stat} from 'node:fs/promises';
@@ -67,7 +68,7 @@ async function handle(req,res) {
     await pipeline(createReadStream(file),res); return;
   }
   const headers = new Headers();
-  for (const name of ['accept','accept-language','content-type','origin','referer','user-agent','rsc',
+  for (const name of ['accept','accept-language','content-type','origin','referer','sec-fetch-site','user-agent','rsc',
     'next-router-state-tree','next-router-prefetch','next-url']) {
     if (typeof req.headers[name]==='string') headers.set(name,req.headers[name]);
   }
@@ -75,7 +76,7 @@ async function handle(req,res) {
   const init = {method:req.method,headers};
   if (!['GET','HEAD'].includes(req.method)) {
     const chunks=[]; let size=0;
-    const limit= url.pathname==='/api/recognize' ? 9500000 : 128000;
+    const limit= url.pathname==='/api/card-requests' ? 4096 : url.pathname==='/api/recognize' ? 9500000 : 128000;
     if(Number(req.headers['content-length'])>limit) return reply(res,413,'Request too large');
     for await (const chunk of req) {
       size+=chunk.length;
@@ -84,7 +85,8 @@ async function handle(req,res) {
     }
     init.body=Buffer.concat(chunks);
   }
-  const result=await app.fetch(new Request(url,init),env,{props:{},waitUntil(promise){
+  const request = new Request(url,init);
+  const result=url.pathname==='/api/card-requests' ? await handleCardRequests(request,user) : await app.fetch(request,env,{props:{},waitUntil(promise){
     Promise.resolve(promise).catch(()=>console.error('DueCue background job failed'));
   },passThroughOnException(){}});
   const outgoing=Object.fromEntries(result.headers);
