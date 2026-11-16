@@ -46,3 +46,9 @@ yarn-error.log*
 
 # Rebuilt from the locked OCR packages before dev/build.
 /public/ocr-v7/
+
+# Locally assembled VPS build and database
+/deploy/vps/dist/
+/deploy/vps/data/
+*.sqlite
+*.sqlite-*
