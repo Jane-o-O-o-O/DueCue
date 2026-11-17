@@ -53,7 +53,7 @@ async function handle(req,res) {
   const publicInstallAsset = installAssets.has(url.pathname) && ['GET','HEAD'].includes(req.method) && files.has(url.pathname);
   if (!callback && !user && !publicInstallAsset) {
     if (req.method === 'GET' && ['/','/cards','/brands'].includes(url.pathname)) {
-      res.writeHead(303,{Location:'/login?next='+encodeURIComponent(url.pathname),'Cache-Control':'no-store'});
+      res.writeHead(303,{Location:'/login?next='+encodeURIComponent(url.pathname + url.search),'Cache-Control':'no-store'});
       return res.end();
     }
     return reply(res,401,'请登录知期');
