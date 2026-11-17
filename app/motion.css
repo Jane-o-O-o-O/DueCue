@@ -32,8 +32,9 @@ summary:active {
 }
 .sheet :is(input, select, textarea):focus,
 .search:focus {
-  border-color: #8f86d2;
-  box-shadow: 0 0 0 3px #8980cf20;
+  border-color: #796ba9;
+  outline: 2px solid #796ba9;
+  outline-offset: 0;
   background-color: #fff;
 }
 @media (hover: hover) and (pointer: fine) {
@@ -62,7 +63,6 @@ summary:active {
   position: relative;
 }
 .segments {
-  --slots: 3;
   --pad: 4px;
   --space: 2px;
 }
@@ -121,7 +121,7 @@ summary:active {
 }
 .segments {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--slots), minmax(0, 1fr));
 }
 .fold {
   display: grid;

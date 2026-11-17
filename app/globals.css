@@ -908,30 +908,45 @@ h1 {
   gap: 10px;
 }
 .thumbs {
-  display: flex;
-  gap: 6px;
-  overflow: auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+  gap: 8px;
 }
+.thumbs li { position: relative; min-width: 0; }
 .thumbs img {
-  max-height: 80px;
-}
-.proof {
-  margin-bottom: 8px;
-  color: #6455b4;
-}
-.proof img {
-  max-width: 100%;
   display: block;
-  margin-top: 7px;
+  width: 100%;
+  height: 94px;
+  object-fit: cover;
+  object-position: center top;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #f5f4f8;
 }
-.sheet blockquote {
-  margin: 8px 0 14px;
-  border-left: 3px solid #a49ae2;
-  padding: 7px 10px;
-  background: #f7f6fc;
-  color: #625a70;
-  font-size: 12px;
+.thumbs button {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: start end;
+  padding: 4px;
 }
+.thumbs button svg {
+  width: 23px;
+  height: 23px;
+  padding: 4px;
+  border: 1px solid #ffffffc9;
+  border-radius: 50%;
+  color: white;
+  background: #252333df;
+}
+.reviewPager { display: flex; align-items: center; justify-content: space-between; color: #625d72; font-size: 13px; }
+.importSheet .formBox + .primary { margin-top: 16px; }
 .textBtn {
   color: #6452b5;
   padding: 6px 0;
@@ -1019,8 +1034,7 @@ dd {
 .settingRow small,
 .sheet .hint,
 .sheet label,
-.textBtn,
-.proof {
+.textBtn {
   font-size: 14px;
 }
 .tableHead,
@@ -1081,6 +1095,16 @@ dd {
   font-size: 16px;
   color: #292b34;
 }
+.sheet input[hidden] { display: none; }
+.sheet label, .nameEntry { min-width: 0; }
+.sheet input[type="date"] {
+  appearance: none;
+  -webkit-appearance: none;
+  box-sizing: border-box;
+  height: 44px;
+  text-align: left;
+}
+.sheet input::-webkit-date-and-time-value { text-align: left; margin: 0; }
 .sheet select {
   appearance: none;
   padding-right: 29px;
@@ -1118,7 +1142,10 @@ dd {
 .sheet .soft {
   min-height: 46px;
 }
+.importSheet .actions button { width: 100%; border-radius: 12px; }
 .importSheet .actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   position: sticky;
   bottom: -24px;
   padding: 10px 0 3px;
@@ -1340,6 +1367,8 @@ dd {
     background: #d8d9df;
     border-radius: 12px;
   }
+  .iconBtn, .deckNav button { width: 44px; height: 44px; }
+  .segments button { min-height: 44px; }
   .sheetHead {
     margin-bottom: 14px;
   }
