@@ -18,6 +18,7 @@ services:
       BIND_ADDRESS: 0.0.0.0
       PORT: "3000"
       DUECUE_DATA: /data
+      SCREENSHOT_MODEL_URL: http://screenshot-model:8080/v1/chat/completions
     ports:
       - "127.0.0.1:3000:3000"
     volumes:
@@ -45,6 +46,21 @@ services:
     tmpfs: ["/tmp"]
     cpus: 2
     mem_limit: 3g
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - /var/lib/duecue-models:/models:ro
+
+  screenshot-model:
+    image: ghcr.io/ggml-org/llama.cpp:server@sha256:5b43086e3ba7ea5794d72904654f6cd41224a9b1c6ac0398f4940ee380d30f23
+    user: "65534:65534"
+    command: ["-m", "/models/Qwen3-4B-Instruct-2507-Q4_K_M.gguf", "--alias", "screenshot-analysis", "--host", "0.0.0.0", "--port", "8080", "-c", "8192", "-t", "3", "-tb", "3", "-np", "1", "-ctk", "q8_0", "--no-context-shift"]
+    restart: unless-stopped
+    read_only: true
+    tmpfs: ["/tmp"]
+    cpus: 3
+    mem_limit: 4500m
     cap_drop: [ALL]
     security_opt:
       - no-new-privileges:true
