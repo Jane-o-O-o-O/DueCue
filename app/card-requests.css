@@ -1,0 +1,23 @@
+.cardRequests { grid-column: 1 / -1; min-width: 0; }
+.cardRequests form { display: grid; gap: 8px; }
+.cardRequests label { font-size: 17px; font-weight: 680; }
+.cardRequestInbox summary { font-size: 14px; font-weight: 650; }
+.cardRequests textarea { resize: vertical; min-height: 90px; width: 100%; padding: 12px; border: 1px solid var(--line); border-radius: 12px; color: inherit; background: #faf9ff; font: inherit; font-size: 16px; }
+.cardRequestSend { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.cardRequestSend span, .cardRequestItem time { font-size: 12px; color: #615a71; }
+.cardRequestSend button { width: auto; }
+.cardRequests button:disabled { opacity: .6; }
+.cardRequestError { color: #93363d; }
+.cardRequestInbox { padding: 14px 0; border-bottom: 1px solid var(--line); }
+.cardRequestInbox summary { cursor: pointer; }
+.cardRequestItem { margin: 12px 0; overflow-wrap: anywhere; }
+.cardRequestItem p { margin: 4px 0 9px; white-space: pre-line; }
+.cardRequestReply { padding: 12px 15px; background: #f4f1fc; border-radius: 12px; }
+.cardRequestReply strong { font-size: 12px; color: #5946ac; }
+.cardRequestReply a { display: inline-block; margin: 2px 12px 2px 0; color: #543ca2; text-underline-offset: 3px; }
+
+.cardRequestQuestion {
+  font-size: 14px;
+  font-weight: 650;
+  color: #4b435d;
+}
