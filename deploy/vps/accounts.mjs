@@ -33,7 +33,7 @@ const sessionHash = req => {
   return token ? key(token[1]) : '';
 };
 const client = req => req.headers['x-real-ip'] || req.socket.remoteAddress;
-function allow(bucket, max, ttl) {
+export function allow(bucket, max, ttl) {
   const row = sqlite.prepare(`INSERT INTO auth_limits VALUES (?,1,?)
     ON CONFLICT(bucket) DO UPDATE SET used=CASE WHEN expires<=? THEN 1 ELSE used+1 END,
     expires=CASE WHEN expires<=? THEN excluded.expires ELSE expires END RETURNING used`)

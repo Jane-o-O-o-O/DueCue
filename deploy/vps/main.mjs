@@ -1,7 +1,8 @@
 import {registerHooks} from 'node:module';
 import {createServer} from 'node:http';
 import {handleCardRequests} from './card-requests.mjs';
-import {identity,accountRoute} from './accounts.mjs';
+import {identity,accountRoute,allow} from './accounts.mjs';
+import {redeemCode} from './redemption.mjs';
 import {readdirSync,createReadStream} from 'node:fs';
 import {stat} from 'node:fs/promises';
 import {join,extname} from 'node:path';
@@ -76,7 +77,7 @@ async function handle(req,res) {
   const init = {method:req.method,headers};
   if (!['GET','HEAD'].includes(req.method)) {
     const chunks=[]; let size=0;
-    const limit= url.pathname==='/api/card-requests' ? 4096 : url.pathname==='/api/recognize' ? 9500000 : 128000;
+    const limit= ['/api/card-requests','/api/redeem'].includes(url.pathname) ? 4096 : url.pathname==='/api/recognize' ? 9500000 : 128000;
     if(Number(req.headers['content-length'])>limit) return reply(res,413,'Request too large');
     for await (const chunk of req) {
       size+=chunk.length;
@@ -86,6 +87,22 @@ async function handle(req,res) {
     init.body=Buffer.concat(chunks);
   }
   const request = new Request(url,init);
+  if (url.pathname==='/api/redeem') {
+    let status=200, body;
+    const source=request.headers.get('origin');
+    const sameOrigin=source && source!=='null' ? source===origin : request.headers.get('sec-fetch-site')==='same-origin';
+    if (request.method!=='POST') { status=405; body={error:'请从设置页兑换。'}; }
+    else if (!sameOrigin || request.headers.get('content-type')?.split(';')[0]!=='application/json') {
+      status=403; body={error:'请从知期设置页兑换。'};
+    } else if (!allow('redeem:'+user,20,60000)) {
+      status=429; body={error:'尝试次数较多，请稍后再试。'};
+    } else {
+      const input=await request.json().catch(()=>null);
+      body=redeemCode(user,input?.code);
+      if (body.error) status=400;
+    }
+    return reply(res,status,JSON.stringify(body),{'Content-Type':'application/json; charset=utf-8'});
+  }
   const result=url.pathname==='/api/card-requests' ? await handleCardRequests(request,user) : await app.fetch(request,env,{props:{},waitUntil(promise){
     Promise.resolve(promise).catch(()=>console.error('DueCue background job failed'));
   },passThroughOnException(){}});
