@@ -1,6 +1,6 @@
 import { env } from "cloudflare:workers";
 export const runtime = () =>
-  env as unknown as Record<string, string> & { DB: D1Database };
+  env as unknown as Record<string, string> & { DB: D1Database; SCREENSHOT_MODEL_URL?: string; SCREENSHOT_OPENAI_API_KEY?: string; SCREENSHOT_OPENAI_BASE_URL?: string; callScreenshotModel?: (body: string, signal: AbortSignal) => Promise<Response> };
 export const week = 7 * 86400000;
 export function owner(r: Request) {
   return (

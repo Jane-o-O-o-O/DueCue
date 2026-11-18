@@ -50,7 +50,7 @@ const DB = {
 };
 
 export const env = {DB};
-for (const name of ['SCREENSHOT_MODEL_URL','OPENAI_API_KEY','PLAN_PRICE_CNY','PLAN_DAYS','ALIPAY_APP_ID',
+for (const name of ['SCREENSHOT_MODEL_URL','SCREENSHOT_OPENAI_API_KEY','SCREENSHOT_OPENAI_BASE_URL','OPENAI_API_KEY','PLAN_PRICE_CNY','PLAN_DAYS','ALIPAY_APP_ID',
   'ALIPAY_SELLER_ID','ALIPAY_PUBLIC_KEY','ALIPAY_PRIVATE_KEY','ALIPAY_NOTIFY_URL']) {
   if (process.env[name]) env[name] = process.env[name].replaceAll('\\n','\n');
 }
