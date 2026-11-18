@@ -31,14 +31,14 @@ export async function POST(req: Request) {
     return json({ error: "登录后再保存。" }, 403);
   const member = await entitlement(uid);
   if (!member.active)
-    return json({ error: "试用期已结束，请开通使用权益。" }, 402);
+    return json({ error: "试用已结束，已有订阅仍可查看。" }, 402);
   let body;
   try {
     body = await readBody(req, 120000);
   } catch {
     return json({ error: "记录格式无效。" }, 400);
   }
-  const rows = Array.isArray(body.entries) ? body.entries.map(normalize) : [];
+  const rows = Array.isArray(body?.entries) ? body.entries.map(normalize) : [];
   if (!rows.length || rows.length > 50 || rows.some((r: any) => !r))
     return json({ error: "请核对名称、金额和日期。" }, 400);
   const db = runtime().DB;

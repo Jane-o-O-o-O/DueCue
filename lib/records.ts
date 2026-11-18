@@ -1,3 +1,8 @@
+export const paymentLabels = { original: "原币金额", settlement: "结算金额", fee: "交易费" } as const;
+export type PaymentPart = keyof typeof paymentLabels;
+export type Payment = {
+  date: string;
+} & Partial<Record<PaymentPart, { amount: string; currency: string }>>;
 export type Entry = {
   id: string;
   name: string;
@@ -8,10 +13,11 @@ export type Entry = {
   date: string;
   note: string;
   remind: number;
+  payment?: Payment;
 };
-export const kinds = ["自动续费", "会员到期", "账单还款", "提醒复查"];
-export const cycles = ["每月", "每年", "每季", "单次"];
-export const currencies = ["CNY", "USD", "HKD", "EUR", "GBP", "JPY"];
+export const kinds = ["自动续费", "会员到期", "账单还款", "提醒复查", "已扣款"];
+export const cycles = ["每月", "每年", "每季", "单次", "待确认"];
+export const currencies = ["CNY", "USD", "HKD", "EUR", "GBP", "JPY", "PHP", "TWD", "SGD", "AUD", "CAD", "KRW", "INR", "MYR", "THB"];
 export const symbols: Record<string, string> = {
   CNY: "¥",
   USD: "US$",
@@ -19,6 +25,7 @@ export const symbols: Record<string, string> = {
   EUR: "€",
   GBP: "£",
   JPY: "JP¥",
+  PHP: "₱",
 };
 export const iso = (d: Date) =>
   [
@@ -49,7 +56,7 @@ export function normalize(v: any): Entry | null {
     v.name.length > 80 ||
     !kinds.includes(v.kind) ||
     !cycles.includes(v.cycle) ||
-    !currencies.includes(v.currency)
+    !(currencies.includes(v.currency) || (v.currency === "" && v.amount === ""))
   )
     return null;
   if (
@@ -64,7 +71,21 @@ export function normalize(v: any): Entry | null {
     return null;
   if (typeof v.id !== "string" || !/^[-a-zA-Z0-9]{1,64}$/.test(v.id))
     return null;
+  let payment: Payment | undefined;
+  if (v.kind === "已扣款") {
+    if (v.date || (v.payment != null && typeof v.payment !== "object")) return null;
+    const paidDate = v.payment?.date ?? "";
+    if (paidDate !== "" && !validDate(paidDate)) return null;
+    payment = { date: paidDate };
+    for (const key of Object.keys(paymentLabels) as PaymentPart[]) {
+      const part = v.payment?.[key];
+      if (!part || part.amount === "") continue;
+      if (typeof part.amount !== "string" || !/^\d{1,8}(?:\.\d{1,2})?$/.test(part.amount) || !currencies.includes(part.currency)) return null;
+      payment[key] = { amount: part.amount, currency: part.currency };
+    }
+  }
   return {
+    ...(payment && { payment }),
     id: v.id,
     name: v.name.trim(),
     kind: v.kind,
