@@ -31,6 +31,11 @@ sqlite.exec(`
 `);
 
 const minute = 60000;
+const codeLength = 6;
+const codeMinutes = 10;
+const sixDigitChallenge = 'otp6-';
+// A challenge sent before the six-digit rollout keeps its original format until expiry.
+const challengeLength = id => id.startsWith(sixDigitChallenge) ? codeLength : 8;
 const sessionSeconds = 30 * 86400;
 const setupSeconds = 15 * 60;
 const setupCookieName = '__Host-duecue-setup';
@@ -189,9 +194,10 @@ function passwordPage(res,next,message='',status=200) {
 }
 function verifyPage(res,id,email,next,message='',status=200,setup=false) {
   const back = '/login?mode='+(setup?'setup':'email')+'&amp;next='+encodeURIComponent(next);
-  screen(res,status,'验证邮箱',errorLine(message)+'<p>8 位验证码已发至 '+esc(email)+'，10 分钟内有效。</p>'+
+  const digits = challengeLength(id);
+  screen(res,status,'验证邮箱',errorLine(message)+'<p>'+digits+' 位验证码已发至 '+esc(email)+'，'+codeMinutes+' 分钟内有效。</p>'+
     formStart(res,'/auth/verify')+hidden('challenge',id)+(setup?hidden('setup','1'):'')+nextField(next)+
-    '<label>验证码<input name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{8}" maxlength="8" required autofocus></label>'+
+    '<label>验证码<input name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{'+digits+'}" maxlength="'+digits+'" required autofocus></label>'+
     '<button>验证并继续</button></form><a href="'+back+'">返回重新发码</a>');
 }
 function setupPage(res,pending,message='',status=200) {
@@ -339,10 +345,10 @@ export async function accountRoute(req,res,url) {
         !allow('mail-hour:'+email,5,60*minute) || !allow('mail-total',150,60*minute)) {
       emailPage(res,next,'发送过于频繁，请稍后再试。',429,setup,email); return;
     }
-    const id=randomBytes(20).toString('hex');
-    const code=String(randomInt(100000000)).padStart(8,'0');
+    const id=sixDigitChallenge+randomBytes(20).toString('hex');
+    const code=String(randomInt(10 ** codeLength)).padStart(codeLength,'0');
     sqlite.prepare('INSERT INTO auth_codes (id,email,digest,expires) VALUES (?,?,?,?)')
-      .run(id,email,codeDigest(id,code),Date.now()+10*minute);
+      .run(id,email,codeDigest(id,code),Date.now()+codeMinutes*minute);
     try {
       const result=await fetch('https://api.resend.com/emails',{method:'POST',signal:AbortSignal.timeout(12000),
         headers:{Authorization:'Bearer '+mailKey,'Content-Type':'application/json','Idempotency-Key':id},
@@ -359,7 +365,8 @@ export async function accountRoute(req,res,url) {
     const id=form.get('challenge') || '';
     const row=sqlite.prepare('SELECT * FROM auth_codes WHERE id=? AND expires>? AND attempts<5').get(id,Date.now());
     if (!row) return emailPage(res,next,'验证码已失效，请重新获取。',400,setup);
-    if (!same(row.digest,codeDigest(id,form.get('code') || ''))) {
+    const code=form.get('code') || '';
+    if (code.length!==challengeLength(id) || !/^\d+$/.test(code) || !same(row.digest,codeDigest(id,code))) {
       sqlite.prepare('UPDATE auth_codes SET attempts=attempts+1 WHERE id=?').run(id);
       return verifyPage(res,id,row.email,next,'验证码有误，请重新输入。',400,setup);
     }
