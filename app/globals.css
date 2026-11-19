@@ -177,7 +177,8 @@ h1 {
 }
 .walletPanel > .drop {
   width: 100%;
-  min-height: 210px;
+  min-height: clamp(112px, 17svh, 170px);
+  border-radius: 18px;
 }
 .deck {
   --strip: 48px;
@@ -750,41 +751,115 @@ h1 {
 }
 .settings {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
   gap: 20px;
 }
-.memberHero {
-  padding: 20px;
-  border-radius: 13px;
-  background: #f2f0fc;
-  color: #5946ac;
-  margin-bottom: 15px;
+.settingsGroup h2 {
+  margin: 0 8px 8px;
+  color: #615b73;
+  font-size: 13px;
+  font-weight: 680;
 }
-.memberHero h2 {
-  margin: 8px 0;
+.settingsCard {
+  overflow: hidden;
+  border: 1px solid #e7e4ee;
+  border-radius: 19px;
+  background: white;
+  box-shadow: 0 3px 12px #29213f06;
 }
-.memberHero p {
-  font-size: 12px;
-}
-.settingRow {
+.settingRow, .memberHero {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 13px;
-  padding: 14px 0;
-  border-bottom: 1px solid var(--line);
+  gap: 12px;
+  min-height: 59px;
+  padding: 11px 14px;
 }
-.settingRow:last-child {
-  border-bottom: 0;
+.settingRow {
+  width: 100%;
+  color: inherit;
+  text-align: left;
+  text-decoration: none;
 }
-.settingRow b,
-.settingRow small {
-  display: block;
+.settingRow + .settingRow,
+.settingsCard .membership,
+.settingsCard .membership + .settingRow {
+  border-top: 1px solid #f0edf4;
 }
-.settingRow small {
-  font-size: 11px;
-  color: #88818f;
+:is(a, button).settingRow:hover {
+  background: #f9f7fc;
 }
+.settingRow:focus-visible {
+  outline-offset: -3px;
+  outline: 3px solid #9289e7;
+}
+.settingIcon {
+  width: 36px;
+  height: 36px;
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  border-radius: 11px;
+}
+.tone-purple { background: #eee8fa; color: #62508e; }
+.tone-blue { background: #eaf0fb; color: #4b6294; }
+.tone-teal { background: #e7f2ee; color: #376c60; }
+.tone-amber { background: #f7eee4; color: #855a38; }
+.settingText {
+  min-width: 0;
+  flex: 1;
+}
+.settingText b, .settingText small { display: block; }
+.settingText b { font-size: 15px; font-weight: 660; }
+.settingText small { color: #6e6879; font-size: 12px; margin-top: 2px; }
+.settingArrow { flex: none; color: #777188; }
+.memberHero { background: #fbf9ff; }
+.membershipPurchase { margin: 0 14px 12px; }
+.settingHelp {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #6e6879;
+  font-size: 12px;
+  padding: 10px 8px 0;
+}
+.settingsSubpage { grid-template-columns: minmax(0, 440px); }
+.settingsBack { gap: 3px; flex: none; white-space: nowrap; }
+.redeemTime {
+  display: grid;
+  gap: 18px;
+}
+.redeemIntro {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #5f586e;
+  font-size: 14px;
+}
+.redeemIntro .settingIcon { width: 42px; height: 42px; }
+.redeemTime form { display: grid; gap: 7px; }
+.redeemTime label { font-size: 14px; font-weight: 650; }
+.redeemFields { display: flex; gap: 8px; }
+.redeemFields input {
+  min-width: 0;
+  flex: 1;
+  min-height: 47px;
+  padding: 8px 12px;
+  border: 1px solid #ddd8ea;
+  border-radius: 12px;
+  background: #fbfaff;
+  color: #292833;
+  font-size: 16px;
+}
+.redeemFields button { min-height: 47px; padding-inline: 16px; }
+.redeemTime [role="alert"], .redeemTime [role="status"]:not(:empty) {
+  padding: 9px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+}
+.redeemTime [role="alert"] { background: #fff0f0; color: #8a3541; }
+.redeemTime [role="status"]:not(:empty) { background: #edf7ef; color: #35664c; }
+.redeemTime [role="status"]:empty { display: none; }
 .modalLayer {
   position: fixed;
   inset: 0;
@@ -1167,16 +1242,6 @@ dd {
 .detailTop small {
   color: #555764;
 }
-.memberHero {
-  background: #f1f0f7;
-  color: #413e54;
-}
-.settingRow:first-child {
-  padding-top: 3px;
-}
-.settingRow small {
-  color: var(--muted);
-}
 @media (max-width: 760px) {
   .dashGrid {
     grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
@@ -1226,6 +1291,7 @@ dd {
     grid-template-columns: minmax(0, 1fr);
     gap: 19px;
   }
+  .settings { gap: 17px; }
   .deck {
     --strip: 42px;
     --face: clamp(198px, 55vw, 244px);
@@ -1406,11 +1472,12 @@ dd {
 }
 
 /* The wallet occupies the first screen; the calendar and forecast follow it. */
-.walletHome {
+.walletApp {
   max-width: 800px;
 }
-.walletHome .pageHeader {
+.walletApp .pageHeader {
   margin: clamp(23px, 4vh, 48px) 0 24px;
+  min-height: 44px;
 }
 .walletActions {
   display: flex;
@@ -1562,11 +1629,11 @@ dd {
   color: #514d62;
 }
 @media (max-width: 680px) {
-  .walletHome {
+  .walletApp {
     max-width: 520px;
     padding-inline: clamp(13px, 4vw, 20px);
   }
-  .walletHome .pageHeader {
+  .walletApp .pageHeader {
     margin: 3px 1px 20px;
   }
   .walletHome .deck {
@@ -1615,11 +1682,6 @@ dd {
   }
 }
 
-.settingRow.catalogEntry {
-  color: inherit;
-  text-decoration: none;
-}
-
 .withGallery {
   position: relative;
   min-height: 44px;
@@ -1645,3 +1707,18 @@ dd {
   justify-content: flex-end;
   padding: 10px 4px;
 }
+
+.paymentBreakdown {
+  border-block: 1px solid #e5e6ea;
+}
+.paymentBreakdown summary {
+  padding: 13px 2px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 550;
+}
+.paymentBreakdown .fields {
+  padding-bottom: 14px;
+}
+.paymentPart { display: contents; }
+.importHint { color: #595d69; font-size: 14px; }
