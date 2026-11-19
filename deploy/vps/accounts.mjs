@@ -200,6 +200,36 @@ function verifyPage(res,id,email,next,message='',status=200,setup=false) {
     '<label>验证码<input name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{'+digits+'}" maxlength="'+digits+'" required autofocus></label>'+
     '<button>验证并继续</button></form><a href="'+back+'">返回重新发码</a>');
 }
+function verificationEmail(email, code) {
+  const subject = '知期邮箱验证码';
+  const expiry = `验证码在 ${codeMinutes} 分钟内有效，请勿转发。`;
+  const ignore = '如果你没有发起此操作，可以忽略这封邮件。';
+  const text = `你的知期验证码是 ${code}。\n在知期输入验证码即可继续。${expiry}\n\n${ignore}`;
+  const html = `<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${subject}</title></head>
+<body style="margin:0;background:#f3f1f8;color:#252139;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;">使用验证码完成知期的邮箱验证，有效期 ${codeMinutes} 分钟。</div>
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f3f1f8;">
+    <tr><td align="center" style="padding:32px 14px;">
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:480px;background:#fff;border:1px solid #e7e2f1;border-radius:22px;">
+        <tr><td style="padding:30px 24px 24px;">
+          <p style="margin:0 0 18px;color:#5f4c83;font-size:16px;font-weight:700;">知期</p>
+          <h1 style="margin:0 0 8px;font-size:25px;line-height:1.3;letter-spacing:-0.02em;">邮箱验证码</h1>
+          <p style="margin:0;color:#59516a;font-size:15px;line-height:1.6;">在知期输入下方验证码即可继续。</p>
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:20px 0 14px;">
+            <tr><td align="center" style="padding:20px 12px;background:#f2ecfa;border:1px solid #e8ddf4;border-radius:14px;color:#392b58;font:700 36px/1.2 ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:.15em;">${code}</td></tr>
+          </table>
+          <p style="margin:0;color:#59516a;font-size:13px;line-height:1.6;">${expiry}</p>
+        </td></tr>
+        <tr><td style="padding:16px 24px;border-top:1px solid #eeeaf4;color:#665f75;font-size:13px;line-height:1.6;">${ignore}</td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+  return {from,to:[email],subject,text,html};
+}
 function setupPage(res,pending,message='',status=200) {
   screen(res,status,'设置登录密码',errorLine(message)+'<p>邮箱已验证。输入两次相同的密码，以后就能用这个邮箱和密码登录。</p>'+
     '<div class="account-id"><small>账号</small>'+esc(pending.email)+'</div>'+formStart(res,'/auth/setup')+
@@ -352,7 +382,7 @@ export async function accountRoute(req,res,url) {
     try {
       const result=await fetch('https://api.resend.com/emails',{method:'POST',signal:AbortSignal.timeout(12000),
         headers:{Authorization:'Bearer '+mailKey,'Content-Type':'application/json','Idempotency-Key':id},
-        body:JSON.stringify({from,to:[email],subject:'知期邮箱验证码',text:'你的知期验证码是 '+code+'，10 分钟内有效。请在知期注册或登录页面输入此码。若非本人操作，可忽略此邮件。'})});
+        body:JSON.stringify(verificationEmail(email,code))});
       if (!result.ok || !(await result.json()).id) throw Error('Resend send failed');
     } catch {
       sqlite.prepare('DELETE FROM auth_codes WHERE id=?').run(id);
