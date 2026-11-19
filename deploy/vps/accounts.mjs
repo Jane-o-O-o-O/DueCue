@@ -169,14 +169,14 @@ const errorLine = text => text ? '<p role="alert" class="error">'+esc(text)+'</p
 function methodLinks(next, method) {
   const tail = '&amp;next='+encodeURIComponent(next);
   return '<nav class="methods" aria-label="登录方式">'+
-    '<a href="/login?mode=email'+tail+'"'+(method==='email'?' aria-current="page"':'')+'>邮箱验证码</a>'+
-    '<a href="/login?mode=password'+tail+'"'+(method==='password'?' aria-current="page"':'')+'>账号密码</a></nav>';
+    '<a href="/login?mode=password'+tail+'"'+(method==='password'?' aria-current="page"':'')+'>账号密码</a>'+
+    '<a href="/login?mode=email'+tail+'"'+(method==='email'?' aria-current="page"':'')+'>邮箱登录或注册</a></nav>';
 }
 function emailPage(res,next,message='',status=200,setup=false,email='') {
   const mode = setup ? hidden('setup','1') : '';
   screen(res,status,setup?'通过邮箱设置密码':'登录知期',
     (setup?'':methodLinks(next,'email'))+errorLine(message)+
-    '<p>'+(setup?'验证邮箱后，输入两次新密码。':'首次使用邮箱注册时，验证后会请你设置登录密码。')+'</p>'+
+    '<p>'+(setup?'验证邮箱后，输入两次新密码。':'已注册用户验证邮箱后直接登录。首次使用时，验证后会请你设置密码。')+'</p>'+
     formStart(res,'/auth/send')+mode+nextField(next)+
     '<label>邮箱<input type="email" name="email" autocomplete="email" maxlength="254" value="'+esc(email)+'" required></label>'+
     '<button>发送验证码</button></form>');
@@ -250,11 +250,11 @@ export async function accountRoute(req,res,url) {
       return emailPage(res,next,'',200,true,account?.email);
     }
     if (user) return redirect(res,next);
-    if (mode==='password') return passwordPage(res,next);
-    return emailPage(res,next);
+    if (mode==='email') return emailPage(res,next);
+    return passwordPage(res,next);
   }
   if ((req.method==='GET' || req.method==='HEAD') && ['/auth/send','/auth/password','/auth/verify','/auth/logout','/auth/nickname'].includes(path)) {
-    return redirect(res,path==='/auth/password' ? '/login?mode=password' : '/login');
+    return redirect(res,['/auth/send','/auth/verify'].includes(path) ? '/login?mode=email' : '/login');
   }
   if (req.method!=='POST') {
     screen(res,405,'请从登录页继续','<a href="/login">打开登录页</a>'); return;
@@ -262,7 +262,7 @@ export async function accountRoute(req,res,url) {
   const form=await readForm(req);
   if (!form) { screen(res,400,'表单无效','<a href="/login">重新登录</a>'); return; }
   if (!trustedForm(req,url.origin,form)) {
-    const retry = path==='/auth/password' ? '/login?mode=password' : '/login';
+    const retry = ['/auth/send','/auth/verify'].includes(path) ? '/login?mode=email' : '/login';
     screen(res,403,'请重新打开登录页','<p>当前表单无法验证，请重新打开后提交。</p><a href="'+retry+'">重新打开登录页</a>'); return;
   }
   const next=nextPage(form.get('next'));
