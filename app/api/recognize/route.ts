@@ -6,6 +6,7 @@ import {
   trustedOrigin,
   readBody,
 } from "@/lib/server";
+import { analyzeScreenshotImages, analyzeScreenshots } from "@/lib/screenshot-analysis";
 import { kinds, cycles, currencies, validDate, shift } from "@/lib/records";
 const text = { type: "string" },
   nullableInteger = { type: ["integer", "null"] };
@@ -47,7 +48,7 @@ export async function POST(req: Request) {
   if (!uid || !trustedOrigin(req))
     return json({ error: "请先登录再识别。" }, 403);
   if (!(await entitlement(uid)).active)
-    return json({ error: "试用期已结束，请先续期。" }, 402);
+    return json({ error: "试用已结束，已有订阅仍可查看。" }, 402);
   let b;
   try {
     b = await readBody(req, 9500000);
@@ -56,12 +57,64 @@ export async function POST(req: Request) {
   }
   if (!b || typeof b !== "object")
     return json({ error: "无效识别请求。" }, 400);
+  if ("images" in b || "screenshots" in b) {
+    const isImageBatch = "images" in b;
+    const pages: unknown = isImageBatch ? b.images : b.screenshots;
+    const valid: (part: unknown) => part is string = isImageBatch
+      ? (image: unknown): image is string => typeof image === "string" && /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(image)
+      : (text: unknown): text is string => typeof text === "string" && !!text.trim();
+    if (!Array.isArray(pages) || !pages.length || !pages.every(valid)) {
+      return json({ error: "请重新选择包含订阅信息的截图。" }, 400);
+    }
+    const screenshots: string[] = pages;
+    const analyze = isImageBatch ? analyzeScreenshotImages : analyzeScreenshots;
+    const user = uid;
+    async function result(signal: AbortSignal) {
+      try {
+        const items = await analyze(screenshots, runtime(), signal);
+        if (items.length) await startTrial(user);
+        return { body: { items, member: await entitlement(user) }, status: 200 };
+      } catch (error) {
+        const message = error instanceof Error && /[\u3400-\u9fff]/.test(error.message)
+          ? error.message : "AI 暂时未能完成解析，请重试。";
+        return { body: { error: message }, status: 502 };
+      }
+    }
+    if (b.keepAlive === true) {
+      // Leading JSON whitespace keeps a slow inference response flowing through the proxy.
+      const encoder = new TextEncoder();
+      const heartbeat = encoder.encode(" \n");
+      const job = new AbortController();
+      let timer: ReturnType<typeof setInterval>;
+      const stream = new ReadableStream<Uint8Array>({
+        async start(controller) {
+          controller.enqueue(heartbeat);
+          timer = setInterval(() => controller.enqueue(heartbeat), 10000);
+          try {
+            const { body } = await result(AbortSignal.any([job.signal, req.signal]));
+            if (!job.signal.aborted) {
+              controller.enqueue(encoder.encode(JSON.stringify(body)));
+              controller.close();
+            }
+          } finally {
+            clearInterval(timer);
+          }
+        },
+        cancel() { clearInterval(timer); job.abort(); },
+      });
+      return new Response(stream, { headers: {
+        "Content-Type": "application/json; charset=utf-8", "X-Accel-Buffering": "no", "Content-Encoding": "identity",
+      } });
+    }
+    const { body, status } = await result(req.signal);
+    return json(body, status);
+  }
   if (b.engine === "device") {
     await startTrial(uid);
     return json({ member: await entitlement(uid) });
   }
   const key = runtime().OPENAI_API_KEY;
-  if (!key) return json({ error: "云端模型尚未配置，可以使用本机识别。" }, 503);
+  if (!key) return json({ error: "暂时无法解析，请改用本机识别。" }, 503);
   const image =
     typeof b.image === "string" &&
     /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(b.image);
@@ -110,19 +163,9 @@ export async function POST(req: Request) {
       signal: AbortSignal.timeout(65000),
     });
     if (!response.ok) {
-      const problem = (await response.json().catch(() => null)) as {
-        error?: { code?: string };
-      } | null;
-      const code = problem?.error?.code;
-      let message = "云端识别暂时不可用，请重试或改用本机识别。";
-      if (response.status === 401)
-        message = "OpenAI 未接受当前密钥，请在站点设置中更新密钥。";
-      else if (code === "model_not_found" || response.status === 403)
-        message = "当前 API 项目无法使用 gpt-6.2-sol，请检查模型权限。";
-      else if (code === "insufficient_quota")
-        message = "OpenAI API 项目额度不足，可以改用本机识别。";
-      else if (response.status === 429)
-        message = "云端识别请求过于频繁，请稍后重试。";
+      const message = response.status === 429
+        ? "当前请求较多，请稍后重试或改用本机识别。"
+        : "暂时无法解析，请重试或改用本机识别。";
       return json({ error: message }, 502);
     }
     const result: any = await response.json();
