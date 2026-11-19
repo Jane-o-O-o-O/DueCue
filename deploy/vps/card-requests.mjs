@@ -90,9 +90,7 @@ async function composeReply(message) {
   return {cards,reply:lines.join('\n\n'),notifyAuthor:missing.length?1:0};
 }
 
-function mailbox(user) {
-  const recent = sqlite.prepare(`SELECT request_id AS id,message,reply,cards,created FROM card_requests
-    WHERE owner=? ORDER BY number DESC LIMIT 12`).all(user).map(row=>({...row,cards:JSON.parse(row.cards)}));
+function mailbox(user, recent=[]) {
   if (user!==author) return {recent};
   const pending = ' FROM card_requests WHERE notify_author=1 AND seen=0';
   const {total} = sqlite.prepare('SELECT count(*) AS total'+pending).get();
@@ -124,18 +122,20 @@ export async function handleCardRequests(request,user) {
   if (!message || message.length>300 || typeof id!=='string' || !/^[a-f0-9-]{36}$/i.test(id)) {
     return json({error:'请输入 1 至 300 字的卡片留言。'},400);
   }
-  const previous=sqlite.prepare('SELECT message FROM card_requests WHERE owner=? AND request_id=?').get(user,id);
-  if (previous) return previous.message===message ? json(mailbox(user)) : json({error:'请重新提交这条留言。'},409);
+  const previous=sqlite.prepare(`SELECT request_id AS id,message,reply,cards,created FROM card_requests
+    WHERE owner=? AND request_id=?`).get(user,id);
+  if (previous) return previous.message===message ? json(mailbox(user,[{...previous,cards:JSON.parse(previous.cards)}])) : json({error:'请重新提交这条留言。'},409);
   if (active.has(user) || active.size>=3) return json({error:'还有留言正在查询，稍等片刻再试哦。'},429);
   const {count}=sqlite.prepare('SELECT count(*) AS count FROM card_requests WHERE owner=? AND created>?').get(user,Date.now()-600000);
   if (count>=8) return json({error:'刚刚收到了好几条留言，过十分钟再来许愿吧。'},429);
   active.set(user,id);
   try {
     const result=await composeReply(message);
+    const created = Date.now();
     sqlite.prepare(`INSERT INTO card_requests (owner,request_id,message,reply,cards,notify_author,created)
       VALUES (?,?,?,?,?,?,?) ON CONFLICT(owner,request_id) DO NOTHING`)
-      .run(user,id,message,result.reply,JSON.stringify(result.cards),result.notifyAuthor,Date.now());
-    return json(mailbox(user),201);
+      .run(user,id,message,result.reply,JSON.stringify(result.cards),result.notifyAuthor,created);
+    return json(mailbox(user,[{id,message,reply:result.reply,cards:result.cards,created}]),201);
   } catch (error) {
     console.error('Card request failed:',error.name);
     return json({error:'暂时没能完成卡面查询，留言还在输入框里，请稍后再试。'},503);

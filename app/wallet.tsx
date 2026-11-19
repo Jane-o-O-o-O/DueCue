@@ -16,13 +16,24 @@ import {
   ArrowDownUp,
   PenLine,
   CalendarPlus,
+  CircleUserRound,
+  Ticket,
+  MessageSquarePlus,
+  LibraryBig,
+  FlaskConical,
+  type LucideIcon,
 } from "lucide-react";
 import { catalog } from "../public/catalog-data.js";
 import { brands, identifyBrand } from "../public/brands.js";
+import { CardRequests } from "./card-requests";
+import { RedeemTime } from "./redeem-time";
 import { BrandIcon } from "./brand-icon";
 import { WalletCard } from "./wallet-card";
 import {
   examples,
+  kinds,
+  paymentLabels,
+  type PaymentPart,
   iso,
   dateFrom,
   daysLeft,
@@ -32,7 +43,7 @@ import {
   shift,
 } from "@/lib/records";
 import { atOrAfter, occurrencesBetween } from "@/lib/recurrence";
-import Importer, { requestJSON } from "./importer";
+import Importer, { requestJSON, type ImportMode } from "./importer";
 import {
   DialogLayer,
   type DialogControl,
@@ -47,6 +58,25 @@ const tabs = [
   { key: "list", name: "列表", Icon: Layers3 },
   { key: "settings", name: "设置", Icon: Settings2 },
 ] as const;
+type SettingsPage = "home" | "feedback" | "redeem";
+function SettingsRow({ icon: Icon, title, caption, tone = "purple", href, onClick }: {
+  icon: LucideIcon;
+  title: string;
+  caption?: string;
+  tone?: "purple" | "blue" | "teal" | "amber";
+  href?: string;
+  onClick?: () => void;
+}) {
+  const content = <>
+    <span className={"settingIcon tone-" + tone}><Icon size={18} aria-hidden="true" /></span>
+    <span className="settingText"><b>{title}</b>{caption && <small>{caption}</small>}</span>
+    {(href || onClick) && <ChevronRight className="settingArrow" size={17} aria-hidden="true" />}
+  </>;
+  if (href) return <a className="settingRow" href={href}>{content}</a>;
+  if (onClick) return <button type="button" className="settingRow" onClick={onClick}>{content}</button>;
+  return <div className="settingRow">{content}</div>;
+}
+
 const shortDate = (s: string) =>
   s ? Number(s.slice(5, 7)) + "月" + Number(s.slice(8)) + "日" : "日期待确认";
 function due(s: string, t: string) {
@@ -189,7 +219,7 @@ function Month({
         })}
       </div>
       <div
-        key={day || month}
+        key={"agenda-" + (day || month)}
         id="calendar-agenda"
         className="calendarAgenda motionReveal"
       >
@@ -224,16 +254,17 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
     [live, setLive] = useState<Entry[]>([]),
     [member, setMember] = useState<any>({ active: true, started: 0 }),
     [plan, setPlan] = useState<any>(null),
-    [ai, setAI] = useState(false),
     [dbError, setDbError] = useState(""),
+    [walletReady, setWalletReady] = useState(false),
     [tab, setTab] = useState<Tab>("overview"),
-    [demo, setDemo] = useState(true),
+    [settingsPage, setSettingsPage] = useState<SettingsPage>("home"),
+    [demo, setDemo] = useState(false),
     [index, setIndex] = useState(0),
     [filter, F] = useState("全部"),
     [q, Q] = useState(""),
     [search, S] = useState(false),
     [sortBy, sort] = useState(false),
-    [imp, I] = useState<string | null>(null),
+    [imp, I] = useState<ImportMode | null>(null),
     [catalogBrand, setCatalogBrand] = useState(""),
     [detail, D] = useState<Entry | null>(null),
     [edit, E] = useState<Entry | undefined>(),
@@ -262,10 +293,8 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
       setLive(s.entries);
       setMember(s.member);
       setPlan(s.plan);
-      setAI(s.ai);
-      setDemo(
-        !s.entries.length && localStorage.getItem("youqi:hide-demo") !== "yes",
-      );
+      setWalletReady(true);
+      setDemo(localStorage.getItem("youqi:hide-demo") === "no");
       setDbError("");
       const url = new URL(window.location.href);
       if (url.searchParams.has("brand")) {
@@ -283,7 +312,7 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
           I("manual");
         } else if (chosen) {
           setTab("settings");
-          M("试用已结束，请先开通使用权");
+          M("试用已结束，已有订阅仍可查看。");
         }
       }
     } catch (e: any) {
@@ -291,6 +320,12 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
     }
   }
   useEffect(() => {
+    const restoreTab = () => {
+      const match = tabs.find(t => "#" + t.key === location.hash);
+      setTab(match?.key || "overview");
+    };
+    restoreTab();
+    window.addEventListener("hashchange", restoreTab);
     setToday(iso(new Date()));
     refresh();
     const handle = () => {
@@ -300,7 +335,10 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
       }
     };
     document.addEventListener("visibilitychange", handle);
-    return () => document.removeEventListener("visibilitychange", handle);
+    return () => {
+      document.removeEventListener("visibilitychange", handle);
+      window.removeEventListener("hashchange", restoreTab);
+    };
   }, []);
   useEffect(() => {
     if (!msg) return;
@@ -362,18 +400,23 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
     settings: "设置",
   };
   function nav(v: Tab) {
-    if (v === tab) return;
+    if (v === tab) {
+      if (v === "settings") setSettingsPage("home");
+      return;
+    }
+    setSettingsPage("home");
     setNavDirection(tabs.findIndex((t) => t.key === v) > tabIndex ? 1 : -1);
     setTab(v);
+    window.history.replaceState(window.history.state, "", v === "overview" ? "/" : "/#" + v);
     Q("");
     F("全部");
     S(false);
     window.scrollTo({ top: 0, behavior: "instant" });
   }
-  function start(m = "text") {
+  function start(m: ImportMode) {
     if (!member.active) {
       nav("settings");
-      M("试用已结束，请先开通使用权");
+      M("试用已结束，已有订阅仍可查看。");
       return;
     }
     rememberOpener();
@@ -425,7 +468,7 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
           : "试用剩余 " +
             Math.max(1, Math.ceil((member.end - Date.now()) / 86400000)) +
             " 天"
-        : "试用已结束"
+        : "使用时长已到期"
       : "7 天免费试用";
   const heading = (title: string, end?: React.ReactNode) => (
     <div className="sectionTitle">
@@ -482,7 +525,7 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
         </div>
       </div>
       <div className="filters">
-        {["全部", "自动续费", "会员到期", "账单还款", "提醒复查"].map((f) => (
+        {["全部", ...kinds].map((f) => (
           <button
             className={filter === f ? "on" : ""}
             key={f}
@@ -522,7 +565,7 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
                   </small>
                 </span>
               </span>
-              <span className="rowDate">{shortDate(r.date)}</span>
+              <span className="rowDate">{shortDate(r.payment?.date || r.date)}</span>
               <b className="rowAmount">{money(r)}</b>
               <ChevronRight size={15} />
             </button>
@@ -566,18 +609,25 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
         </div>
       </header>
       <main
-        className={tab === "overview" ? "walletHome" : undefined}
+        className={tab === "overview" ? "walletApp walletHome" : "walletApp"}
         inert={!!(detail || imp)}
         style={{ "--direction": navDirection } as React.CSSProperties}
       >
         <header className="pageHeader">
-          <div className="pageTitle motionReveal" key={tab}>
-            <h1>{pageTitles[tab]}</h1>
+          <div className="pageTitle motionReveal" key={tab + settingsPage}>
+            <h1>{tab === "settings" && settingsPage !== "home"
+              ? settingsPage === "feedback" ? "卡片留言" : "兑换时长"
+              : pageTitles[tab]}</h1>
             {demo && tab !== "settings" && (
               <span className="demoLabel">示例</span>
             )}
           </div>
-          {tab !== "settings" && (
+          {tab === "settings" && settingsPage !== "home" && (
+            <button type="button" className="soft settingsBack" onClick={() => setSettingsPage("home")}>
+              <ChevronLeft size={16} aria-hidden="true" /> 返回设置
+            </button>
+          )}
+          {walletReady && tab !== "settings" && (
             <div className="walletActions">
               {tab === "overview" && (
                 <button
@@ -619,7 +669,8 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
             </button>
           </div>
         )}
-        <div key={tab} className="pageStage motionSlide">
+        {!walletReady && !dbError && <p className="hint" role="status">正在打开账本…</p>}
+        {walletReady && <div key={tab} className="pageStage motionSlide">
           {tab === "overview" && (
             <>
               <div className="dashGrid">
@@ -721,8 +772,8 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
                                 slug={slug}
                                 level={n}
                                 slot={j}
-                                dateCaption={n ? "" : due(r.date, today)}
-                                dateText={n ? "" : shortDate(r.date)}
+                                dateCaption={n ? "" : r.kind === "已扣款" ? "交易日期" : due(r.date, today)}
+                                dateText={n ? "" : shortDate(r.payment?.date || r.date)}
                                 label={
                                   r.name + (n ? "，切换到此卡" : "，打开详情")
                                 }
@@ -861,92 +912,73 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
             <Month items={originals} today={today} select={select} />
           )}
           {tab === "settings" && (
-            <div className="settings">
-              <section className="section">
-                <div className="memberHero">
-                  <SquareStack size={28} />
-                  <h2>{status}</h2>
-                  <p>
-                    {member.started
-                      ? "有效至 " + new Date(member.end).toLocaleString("zh-CN")
-                      : "首次保存或成功识别后起算，含截图和文字导入。"}
-                  </p>
-                </div>
-                {plan?.ready ? (
-                  <button
-                    className="primary"
-                    disabled={purchasing}
-                    aria-busy={purchasing}
-                    onClick={async () => {
-                      setPurchasing(true);
-                      try {
-                        const r = await requestJSON("/api/checkout", {
-                          method: "POST",
-                        });
-                        location.assign(r.url);
-                      } catch (e: any) {
-                        setPurchasing(false);
-                        M(e.message);
-                      }
-                    }}
-                  >
-                    {purchasing
-                      ? "正在打开支付宝…"
-                      : `支付宝购买 ${plan.days} 天 · ¥${plan.price}`}
-                  </button>
-                ) : (
-                  <p className="hint">付费方案待开放，到期可主动续期。</p>
-                )}
-              </section>
-              <section className="section">
-                <a className="settingRow catalogEntry" href="/cards">
-                  <b>全部卡面</b>
-                  <ChevronRight size={18} aria-hidden="true" />
-                </a>
-                <a className="settingRow catalogEntry" href="/brands">
-                  <span>
-                    <b>国内会员目录</b>
-                    <small>{catalog.length} 项会员与套餐</small>
-                  </span>
-                  <ChevronRight size={18} aria-hidden="true" />
-                </a>
-                <div className="settingRow">
-                  <span>
-                    <b>示例账本</b>
-                  </span>
-                  <button
-                    className="soft"
-                    onClick={() => {
-                      localStorage.setItem(
-                        "youqi:hide-demo",
-                        demo ? "yes" : "no",
-                      );
-                      setDemo(!demo);
-                      setIndex(0);
-                      nav("overview");
-                    }}
-                  >
-                    {demo ? "返回我的卡包" : "查看示例"}
-                  </button>
-                </div>
-                <div className="settingRow">
-                  <span>
-                    <b>截图与文字识别</b>
-                    <small>{ai ? "gpt-6.2-sol" : "本机识别"}</small>
-                  </span>
-                  <small>可用</small>
-                </div>
-                <div className="settingRow">
-                  <span>
-                    <b>iPhone 日历提醒</b>
-                    <small>打开订阅，点「加入日历」。</small>
-                  </span>
-                  <CalendarPlus size={18} />
-                </div>
-              </section>
+            <div className={"settings" + (settingsPage !== "home" ? " settingsSubpage" : "")}>
+              {settingsPage === "feedback" ? <CardRequests />
+                : settingsPage === "redeem" ? <RedeemTime onRedeemed={setMember} />
+                : <>
+                  <section className="settingsGroup" aria-labelledby="accountPrefsTitle">
+                    <h2 id="accountPrefsTitle">账号与权益</h2>
+                    <div className="settingsCard">
+                      {import.meta.env.VITE_DUECUE_ACCOUNTS === "1" && (
+                        <SettingsRow icon={CircleUserRound} title="我的账号" caption="昵称与登录方式" href="/account" />
+                      )}
+                      <div className="membership">
+                        <div className="memberHero">
+                          <span className="settingIcon tone-purple"><SquareStack size={18} aria-hidden="true" /></span>
+                          <div className="settingText">
+                            <b>{status}</b>
+                            <small>{member.started
+                              ? "有效至 " + new Date(member.end).toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric" })
+                              : "首次保存订阅或完成解析时开始计时。"}</small>
+                          </div>
+                        </div>
+                        {plan?.ready && (
+                          <button className="primary membershipPurchase" disabled={purchasing} aria-busy={purchasing}
+                            onClick={async () => {
+                              setPurchasing(true);
+                              try {
+                                const result = await requestJSON("/api/checkout", { method: "POST" });
+                                location.assign(result.url);
+                              } catch (e) {
+                                setPurchasing(false);
+                                M(e instanceof Error ? e.message : "暂时无法打开支付宝。");
+                              }
+                            }}>
+                            {purchasing ? "正在打开支付宝…" : `支付宝购买 ${plan.days} 天 · ¥${plan.price}`}
+                          </button>
+                        )}
+                      </div>
+                      {import.meta.env.VITE_DUECUE_ACCOUNTS === "1" && (
+                        <SettingsRow icon={Ticket} title="使用兑换码" caption="延长知期使用时长" tone="teal"
+                          onClick={() => setSettingsPage("redeem")} />
+                      )}
+                    </div>
+                  </section>
+                  <section className="settingsGroup" aria-labelledby="toolPrefsTitle">
+                    <h2 id="toolPrefsTitle">卡片与工具</h2>
+                    <div className="settingsCard">
+                      {import.meta.env.VITE_DUECUE_ACCOUNTS === "1" && (
+                        <SettingsRow icon={MessageSquarePlus} title="卡片留言" caption="建议添加一张新卡片" tone="purple"
+                          onClick={() => setSettingsPage("feedback")} />
+                      )}
+                      <SettingsRow icon={Layers3} title="全部卡面" href="/cards?from=settings" tone="blue" />
+                      <SettingsRow icon={LibraryBig} title="国内会员目录" caption={`${catalog.length} 项会员与套餐`}
+                        href="/brands?from=settings" tone="teal" />
+                      <SettingsRow icon={ScanLine} title="AI解析" caption="从截图添加订阅" tone="blue" onClick={() => start("image")} />
+                      <SettingsRow icon={FlaskConical} title={demo ? "返回我的卡包" : "查看示例账本"} tone="amber"
+                        onClick={() => {
+                          localStorage.setItem("youqi:hide-demo", demo ? "yes" : "no");
+                          setDemo(!demo);
+                          setIndex(0);
+                          nav("overview");
+                        }} />
+                    </div>
+                    <p className="settingHelp"><CalendarPlus size={16} aria-hidden="true" /> 打开订阅详情可加入 iPhone 日历。</p>
+                  </section>
+                </>}
             </div>
           )}
-        </div>
+        </div>}
       </main>
       {navigation("mobile")}
       {(detail || imp) && (
@@ -991,12 +1023,14 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
               </div>
               <dl>
                 {[
-                  ["下次日期", shortDate(detail.date)],
+                  detail.kind === "已扣款" ? ["交易日期", detail.payment?.date || "待确认"] : ["下次日期", shortDate(detail.date)],
                   ["周期", detail.cycle],
-                  [
-                    "日历提醒",
-                    detail.remind ? "提前 " + detail.remind + " 天" : "当天",
-                  ],
+                  ...(detail.kind === "已扣款"
+                    ? (Object.keys(paymentLabels) as PaymentPart[]).flatMap(key => {
+                        const part = detail.payment?.[key];
+                        return part ? [[paymentLabels[key], Number(part.amount).toFixed(2) + " " + part.currency]] : [];
+                      })
+                    : [["日历提醒", detail.remind ? "提前 " + detail.remind + " 天" : "当天"]]),
                   ...(detail.note ? [["备注", detail.note]] : []),
                 ].map(([k, v]) => (
                   <div key={k}>
@@ -1034,7 +1068,7 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
                       <PenLine size={16} />
                       编辑
                     </button>
-                    <button
+                    {detail.kind !== "已扣款" && <button
                       className="primary"
                       disabled={!detail.date}
                       onClick={() => {
@@ -1046,7 +1080,7 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
                     >
                       <Download size={16} />
                       加入日历
-                    </button>
+                    </button>}
                   </div>
                   <button
                     disabled={pending}
@@ -1071,7 +1105,6 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
               edit={edit}
               initialMode={imp}
               catalogBrand={catalogBrand}
-              ai={ai}
               onRecognized={setMember}
               save={save}
               close={close}
