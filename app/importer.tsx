@@ -1,22 +1,19 @@
 "use client";
 import { useState, useRef, useLayoutEffect, useEffect } from "react";
-import { parseDeviceText } from "@/lib/device-import";
 import { reducedMotion } from "./motion";
 import { catalog } from "../public/catalog-data.js";
 import { identifyBrand } from "../public/brands.js";
 import { BrandIcon } from "./brand-icon";
 import {
-  AlignLeft,
   ImagePlus,
   PenLine,
   X,
-  Plus,
   ScanLine,
   Check,
   Calendar,
   LoaderCircle,
   ChevronLeft,
-  TriangleAlert,
+  ChevronRight,
 } from "lucide-react";
 import {
   blank,
@@ -28,21 +25,37 @@ import {
   Entry,
   iso,
   normalize,
+  paymentLabels,
+  type PaymentPart,
 } from "@/lib/records";
-type Draft = Entry & {
-  evidence?: string;
-  uncertainty?: string;
-  picture?: string;
-};
+const modes = [
+  { key: "image", label: "截图", Icon: ImagePlus },
+  { key: "manual", label: "手动", Icon: PenLine },
+] as const;
+export type ImportMode = (typeof modes)[number]["key"];
+
+type SelectedImage = { id: string; src: string };
+
 export async function requestJSON(path: string, init?: RequestInit) {
-  const r = await fetch(path, { ...init, cache: "no-store" });
+  let r: Response;
+  try {
+    r = await fetch(path, { ...init, cache: "no-store" });
+  } catch (error) {
+    if (init?.signal?.aborted) throw error;
+    throw Error("连接中断，请检查网络后重试。");
+  }
+  if (r.status === 401 && import.meta.env.VITE_DUECUE_ACCOUNTS === "1") {
+    location.replace("/login?next=" + encodeURIComponent(location.pathname + location.search + location.hash));
+    throw Error("登录已过期，请重新登录。");
+  }
+  if (r.status === 413) throw Error("内容太大，请裁剪截图或分批添加。");
   let v: any;
   try {
     v = await r.json();
   } catch {
     throw Error("服务暂未响应，请稍后重试。");
   }
-  if (!r.ok) throw Error(v.error || "操作失败，请稍后重试。");
+  if (!r.ok || v.error) throw Error(v.error || "操作失败，请稍后重试。");
   return v;
 }
 function getImage(file: File) {
@@ -74,38 +87,17 @@ function getImage(file: File) {
     img.src = url;
   });
 }
-function ScreenshotProof({ picture }: { picture: string }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div className="proof">
-      <button
-        className="textBtn"
-        aria-expanded={open}
-        onClick={() => setOpen(!open)}
-      >
-        {open ? "收起原图" : "查看原图"}
-      </button>
-      <div className="fold" data-open={open} inert={!open} aria-hidden={!open}>
-        <div>
-          <img src={picture} alt="待核对的截图原图" />
-        </div>
-      </div>
-    </div>
-  );
-}
 export default function Importer({
   edit,
   initialMode,
   catalogBrand,
-  ai,
   onRecognized,
   save,
   close,
 }: {
   edit?: Entry;
-  initialMode: string;
+  initialMode: ImportMode;
   catalogBrand?: string;
-  ai: boolean;
   onRecognized: (member: {
     active: boolean;
     started: number;
@@ -116,10 +108,8 @@ export default function Importer({
   close: () => void;
 }) {
   const [mode, setMode] = useState(initialMode),
-    [input, setInput] = useState(""),
-    [images, setImages] = useState<string[]>([]),
-    [base, setBase] = useState(""),
-    [drafts, setDrafts] = useState<Draft[]>(() => {
+    [images, setImages] = useState<SelectedImage[]>([]),
+    [drafts, setDrafts] = useState<Entry[]>(() => {
       if (edit) return [edit];
       if (initialMode !== "manual") return [];
       const chosen = catalog.find((item) => item.slug === catalogBrand);
@@ -134,14 +124,20 @@ export default function Importer({
       ];
     }),
     [step, setStep] = useState(0),
+    [reviewHint, setReviewHint] = useState(""),
     [error, err] = useState(""),
-    [busy, setBusy] = useState(""),
-    [deviceOverride, setDeviceOverride] = useState(false);
-  const local = !ai || deviceOverride;
+    [busy, setBusy] = useState("");
   const job = useRef<AbortController | null>(null);
   useEffect(() => () => job.current?.abort(), []);
   const file = useRef<HTMLInputElement>(null);
   const d = drafts[step];
+  const paid = d?.kind === "已扣款";
+  const manualDraft = useRef<Entry | undefined>(undefined);
+  const nameQuery = mode === "manual" ? d?.name.trim().toLowerCase() : "";
+  const suggestions = nameQuery ? catalog.filter(item =>
+    item.name.toLowerCase() !== nameQuery &&
+    [item.name, ...item.aliases].some(name => name.toLowerCase().includes(nameQuery))
+  ).slice(0, 5) : [];
   const sheet = useRef<HTMLElement>(null);
   const oldHeight = useRef(0);
   const resize = useRef<Animation | null>(null);
@@ -167,90 +163,47 @@ export default function Importer({
       resize.current?.cancel();
     };
   }, [stage]);
-  function change(k: keyof Draft, v: any) {
+  function change(k: keyof Entry, v: any) {
+    err("");
     setDrafts((ds) => ds.map((a, i) => (i === step ? { ...a, [k]: v } : a)));
   }
-  function choose(m: string) {
+  function choose(m: ImportMode) {
     if (m === mode) return;
     rememberSheet();
+    if (mode === "manual") manualDraft.current = d;
     setMode(m);
-    setDrafts(m === "manual" ? [blank()] : []);
+    setDrafts(m === "manual" ? [manualDraft.current || blank()] : []);
     setStep(0);
     err("");
   }
   async function recognize() {
     err("");
-    setBusy("正在识别…");
+    setReviewHint("");
+    setBusy("正在解析…");
     const controller = new AbortController();
     job.current = controller;
     try {
-      const items: Draft[] = [];
-      const sources = mode === "image" ? images : [""];
-      const baseDate = mode === "text" ? iso(new Date()) : base;
-      const readings =
-        local && mode === "image"
-          ? await (
-              await import("@/lib/device-ocr")
-            ).readScreenshots(images, setBusy, controller.signal)
-          : [];
-      for (const [i, im] of sources.entries()) {
-        if (controller.signal.aborted) throw Error("识别已取消。");
-        const result = local
-          ? {
-              items: parseDeviceText(
-                im ? readings[i].text : input,
-                baseDate,
-                im ? readings[i].confidence : 100,
-              ),
-            }
-          : await requestJSON("/api/recognize", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              signal: controller.signal,
-              body: JSON.stringify({
-                text: mode === "text" ? input : "",
-                image: im,
-                baseDate,
-              }),
-            });
-        if (result.member) onRecognized(result.member);
-        for (const a of result.items) {
-          items.push({
-            ...blank(),
-            name: a.name,
-            amount: a.amount,
-            currency: a.currency || "",
-            date: a.date,
-            cycle: a.cycle,
-            kind: a.kind,
-            evidence: a.evidence,
-            uncertainty: a.uncertainty,
-            note: [a.evidence, a.uncertainty]
-              .filter(Boolean)
-              .join(" · ")
-              .slice(0, 600),
-            picture: im,
-          });
-        }
-      }
-      if (!items.length)
-        throw Error(
-          "没有读到订阅信息。可以裁剪包含续费说明的区域，或手动填写。",
-        );
-      if (local) {
-        const usage = await requestJSON("/api/recognize", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          signal: controller.signal,
-          body: JSON.stringify({ engine: "device" }),
-        });
-        if (usage.member) onRecognized(usage.member);
-      }
+      const result = await requestJSON("/api/recognize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
+        body: JSON.stringify({ images: images.map(image => image.src), keepAlive: true }),
+      });
+      if (controller.signal.aborted) return;
+      onRecognized(result.member);
+      const items = result.items.map((item: Entry) => ({
+        ...blank(), name: item.name, amount: item.amount, currency: item.currency,
+        date: item.date, cycle: item.cycle, kind: item.kind, payment: item.payment,
+      }));
       rememberSheet();
+      if (!items.length) {
+        setReviewHint("未找到可以自动填写的订阅，请补充服务名称。");
+        items.push({ ...blank(), kind: "提醒复查", cycle: "待确认", currency: "" });
+      }
       setDrafts(items);
       setStep(0);
     } catch (e: any) {
-      err(controller.signal.aborted ? "识别已取消。" : e.message);
+      if (!controller.signal.aborted) err(e instanceof Error && /[\u3400-\u9fff]/.test(e.message) ? e.message : "暂时无法解析，请重试或手动填写。");
     } finally {
       job.current = null;
       setBusy("");
@@ -258,19 +211,22 @@ export default function Importer({
   }
   async function submit() {
     err("");
-    const row = normalize(d);
-    if (!row) {
-      err("请核对服务名称、币种、金额和日期，金额最多保留两位小数。");
-      return;
-    }
-    if (step + 1 < drafts.length) {
-      rememberSheet();
-      setStep(step + 1);
-      return;
+    const rows: Entry[] = [];
+    for (const [i, draft] of drafts.entries()) {
+      const row = normalize(draft);
+      if (!row) {
+        setStep(i);
+        if (!draft.name.trim()) err("请填写服务名称。");
+        else if (!draft.currency) err("请选择币种。");
+        else if (draft.date && !validDate(draft.date)) err("请选择有效日期。");
+        else err("请填写有效金额，例如 19.90。");
+        return;
+      }
+      rows.push(row);
     }
     setBusy("正在保存…");
     try {
-      await save(drafts.map((v) => normalize(v)!));
+      await save(rows);
       close();
     } catch (e: any) {
       err(e.message);
@@ -282,7 +238,7 @@ export default function Importer({
     <section
       role="dialog"
       aria-modal="true"
-      aria-label={edit ? "编辑订阅" : "添加订阅"}
+      aria-label={edit ? "编辑订阅" : d && mode === "image" ? "核对订阅" : "添加订阅"}
       aria-busy={!!busy}
       ref={sheet}
       className="sheet importSheet"
@@ -296,14 +252,14 @@ export default function Importer({
             {edit
               ? "编辑订阅"
               : d && mode !== "manual"
-                ? "核对识别结果"
+                ? "核对订阅"
                 : "添加订阅"}
           </h2>
         </div>
         <button
           className="iconBtn"
-          onClick={close}
-          disabled={!!busy}
+          onClick={() => { job.current?.abort(); close(); }}
+          disabled={busy === "正在保存…"}
           aria-label="关闭"
         >
           <X size={19} />
@@ -314,15 +270,12 @@ export default function Importer({
           className="segments"
           style={
             {
-              "--choice": ["text", "image", "manual"].indexOf(mode),
+              "--choice": modes.findIndex(item => item.key === mode),
+              "--slots": modes.length,
             } as React.CSSProperties
           }
         >
-          {[
-            ["text", "文字", AlignLeft],
-            ["image", "截图", ImagePlus],
-            ["manual", "手动", PenLine],
-          ].map(([key, label, I]: any) => (
+          {modes.map(({ key, label, Icon }) => (
             <button
               key={key}
               aria-pressed={mode === key}
@@ -330,7 +283,7 @@ export default function Importer({
               className={mode === key ? "sel" : ""}
               onClick={() => choose(key)}
             >
-              <I size={16} />
+              <Icon size={16} />
               {label}
             </button>
           ))}
@@ -340,76 +293,51 @@ export default function Importer({
         {!d ? (
           <>
             <div className="formBox">
-              {mode === "text" ? (
-                <label>
-                  订阅描述
-                  <textarea
-                    autoFocus
-                    maxLength={4000}
-                    placeholder="例如：腾讯视频每月 25 元，12 月 1 日续费"
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                  />
-                </label>
-              ) : (
-                <>
-                  <input
-                    hidden
-                    ref={file}
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    onChange={async (e) => {
-                      const fs = Array.from(e.target.files || []);
-                      setBusy("正在读取截图…");
-                      try {
-                        const next: string[] = [];
-                        for (const f of fs) next.push(await getImage(f));
-                        setImages(next);
-                        err("");
-                      } catch (ex: any) {
-                        err(ex.message);
-                      } finally {
-                        setBusy("");
-                      }
-                    }}
-                  />
-                  <button
-                    disabled={!!busy}
-                    className="drop"
-                    onClick={() => file.current?.click()}
-                  >
-                    <ImagePlus size={28} />
-                    {images.length
-                      ? "已选 " + images.length + " 张 · 重选"
-                      : "选择截图"}
-                  </button>
-                  {images.length > 0 && (
-                    <div className="thumbs">
-                      {images.map((im, i) => (
-                        <img key={i} src={im} alt={"截图 " + (i + 1)} />
-                      ))}
-                    </div>
-                  )}
-                  <label>
-                    截图日期
-                    {images.length > 1 && <small>不同日期请分批导入</small>}
-                    <input
-                      type="date"
-                      value={base}
-                      onChange={(e) => setBase(e.target.value)}
-                    />
-                  </label>
-                </>
+              <input
+                hidden
+                ref={file}
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={async (e) => {
+                  const fs = Array.from(e.target.files || []);
+                  e.target.value = "";
+                  if (!fs.length) return;
+                  setBusy("正在读取截图…");
+                  try {
+                    const next: SelectedImage[] = [];
+                    for (const f of fs) next.push({ id: crypto.randomUUID(), src: await getImage(f) });
+                    setImages(current => [...current, ...next]);
+                    err("");
+                  } catch (ex: any) {
+                    err(ex.message);
+                  } finally {
+                    setBusy("");
+                  }
+                }}
+              />
+              <button
+                disabled={!!busy}
+                className="drop"
+                onClick={() => file.current?.click()}
+              >
+                <ImagePlus size={28} />
+                {images.length ? "继续添加截图" : "选择截图"}
+              </button>
+              {images.length > 0 && (
+                <ul className="thumbs" aria-label="已选截图">
+                  {images.map((im, i) => (
+                    <li key={im.id}>
+                      <img src={im.src} alt={`截图 ${i + 1}`} />
+                      <button type="button" disabled={!!busy} aria-label={`移除第 ${i + 1} 张截图`}
+                        onClick={() => { setImages(current => current.filter(item => item.id !== im.id)); err(""); }}>
+                        <X size={14} strokeWidth={2.5} />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
               )}
             </div>
-            <p className="hint">
-              {local
-                ? mode === "image"
-                  ? "本机识别，截图留在此设备。首次使用需下载识别组件。"
-                  : "在本机提取平台、金额和日期。"
-                : "所选内容将发送给 OpenAI 识别。"}
-            </p>
             {error && (
               <p className="error" role="alert">
                 {error}
@@ -417,53 +345,29 @@ export default function Importer({
             )}
             <button
               className="primary wide"
-              disabled={
-                !!busy || (mode === "text" ? !input.trim() : !images.length)
-              }
+              disabled={!!busy || !images.length}
               onClick={recognize}
             >
-              {busy || "识别并核对"}
+              {busy || "AI解析"}
               {busy ? (
                 <LoaderCircle className="spin" size={17} />
               ) : (
                 <ScanLine size={17} />
               )}
             </button>
-            {busy && job.current && (
-              <button
-                type="button"
-                className="textBtn"
-                onClick={() => job.current?.abort()}
-              >
-                取消识别
-              </button>
-            )}
-            {error && !local && !busy && (
-              <button
-                className="textBtn"
-                onClick={() => {
-                  setDeviceOverride(true);
-                  err("");
-                }}
-              >
-                改用本机识别
-              </button>
-            )}
           </>
         ) : (
           <>
             {drafts.length > 1 && (
-              <p className="hint">
-                第 {step + 1} 条，共 {drafts.length} 条
-              </p>
+              <div className="reviewPager">
+                <button type="button" className="iconBtn" aria-label="上一条" disabled={step === 0 || !!busy}
+                  onClick={() => { setStep(step - 1); err(""); }}><ChevronLeft size={18} /></button>
+                <span>第 {step + 1} / {drafts.length} 条 · 一起保存</span>
+                <button type="button" className="iconBtn" aria-label="下一条" disabled={step === drafts.length - 1 || !!busy}
+                  onClick={() => { setStep(step + 1); err(""); }}><ChevronRight size={18} /></button>
+              </div>
             )}
-            {d.picture && <ScreenshotProof picture={d.picture} />}
-            {d.evidence && <blockquote>{d.evidence}</blockquote>}
-            {d.uncertainty && (
-              <p className="warning">
-                <TriangleAlert size={15} /> {d.uncertainty}
-              </p>
-            )}
+            {reviewHint && <p className="importHint" role="status">{reviewHint}</p>}
             <div className="fields">
               <label className="full">
                 服务名称
@@ -474,30 +378,35 @@ export default function Importer({
                     className="motionReveal"
                   />
                   <input
-                    autoFocus
                     maxLength={80}
-                    list={mode === "manual" ? "subscription-brands" : undefined}
+                    list={suggestions.length ? "subscription-brands" : undefined}
                     autoComplete="off"
                     placeholder="例如：芒果 TV"
                     value={d.name}
                     onChange={(e) => change("name", e.target.value)}
                   />
                 </span>
-                {mode === "manual" && (
-                  <datalist id="subscription-brands">
-                    {catalog.map((item) => (
-                      <option key={item.slug} value={item.name}>
-                        {item.plan}
-                      </option>
-                    ))}
-                  </datalist>
-                )}
               </label>
+              {suggestions.length > 0 && (
+                <datalist id="subscription-brands">
+                  {suggestions.map((item) => (
+                    <option key={item.slug} value={item.name}>{item.plan}</option>
+                  ))}
+                </datalist>
+              )}
               <label>
                 类型
                 <select
+                  aria-label="类型"
                   value={d.kind}
-                  onChange={(e) => change("kind", e.target.value)}
+                  onChange={(e) => {
+                    const kind = e.target.value;
+                    setDrafts(ds => ds.map((row, i) => i !== step ? row : {
+                      ...row, kind, date: kind === "已扣款" ? "" : row.date,
+                      payment: kind === "已扣款" ? { date: "" } : undefined,
+                    }));
+                    err("");
+                  }}
                 >
                   {kinds.map((x) => (
                     <option key={x}>{x}</option>
@@ -507,6 +416,7 @@ export default function Importer({
               <label>
                 周期
                 <select
+                  aria-label="周期"
                   value={d.cycle}
                   onChange={(e) => change("cycle", e.target.value)}
                 >
@@ -516,7 +426,7 @@ export default function Importer({
                 </select>
               </label>
               <label>
-                预计金额
+                {paid ? "实扣金额" : "预计金额"}
                 <input
                   inputMode="decimal"
                   placeholder="待确认"
@@ -527,6 +437,7 @@ export default function Importer({
               <label>
                 币种
                 <select
+                  aria-label="币种"
                   value={d.currency}
                   onChange={(e) => change("currency", e.target.value)}
                 >
@@ -539,16 +450,17 @@ export default function Importer({
                 </select>
               </label>
               <label>
-                {d.kind === "提醒复查" ? "复查日" : "下次日期"}
+                {paid ? "交易日期" : d.kind === "提醒复查" ? "复查日" : "下次日期"}
                 <input
                   type="date"
-                  value={d.date}
-                  onChange={(e) => change("date", e.target.value)}
+                  value={paid ? d.payment?.date || "" : d.date}
+                  onChange={(e) => paid ? change("payment", { ...d.payment, date: e.target.value }) : change("date", e.target.value)}
                 />
               </label>
-              <label>
+              {!paid && <label>
                 日历提醒
                 <select
+                  aria-label="日历提醒"
                   value={d.remind}
                   onChange={(e) => change("remind", Number(e.target.value))}
                 >
@@ -558,18 +470,38 @@ export default function Importer({
                     </option>
                   ))}
                 </select>
-              </label>
+              </label>}
+              {paid && d.payment && Object.keys(paymentLabels).some(key => d.payment?.[key as PaymentPart]) && (
+                <details className="full paymentBreakdown" key={d.id}>
+                  <summary>扣款明细</summary>
+                  <div className="fields">
+                    {(Object.keys(paymentLabels) as PaymentPart[]).map(key => {
+                      const part = d.payment?.[key];
+                      if (!part) return null;
+                      const update = (patch: Partial<typeof part>) => {
+                        change("payment", { ...d.payment, [key]: { ...part, ...patch } });
+                      };
+                      return <div className="paymentPart" key={key}>
+                        <label>{paymentLabels[key]}<input inputMode="decimal" value={part.amount} onChange={e => update({ amount: e.target.value })} /></label>
+                        <label>币种<select aria-label={paymentLabels[key] + "币种"} value={part.currency} onChange={e => update({ currency: e.target.value })}>
+                          {currencies.map(x => <option key={x}>{x}</option>)}
+                        </select></label>
+                      </div>;
+                    })}
+                  </div>
+                </details>
+              )}
               <label className="full">
                 备注
                 <input
                   maxLength={600}
                   value={d.note}
-                  placeholder="可保留「还有十多天」等原话"
+                  placeholder="选填"
                   onChange={(e) => change("note", e.target.value)}
                 />
               </label>
             </div>
-            {!d.date && (
+            {!paid && !d.date && (
               <button
                 className="textBtn"
                 onClick={() =>
@@ -597,21 +529,10 @@ export default function Importer({
               </p>
             )}
             <div className="actions">
-              {step > 0 && (
-                <button
-                  className="soft"
-                  onClick={() => {
-                    rememberSheet();
-                    setStep(step - 1);
-                  }}
-                >
-                  <ChevronLeft size={16} />
-                  上一条
-                </button>
-              )}
+              <button type="button" className="soft" disabled={!!busy} onClick={close}>取消</button>
               <button
                 disabled={!!busy}
-                className="primary wide"
+                className="primary"
                 onClick={submit}
               >
                 {busy ? (
@@ -619,12 +540,7 @@ export default function Importer({
                 ) : (
                   <Check size={17} />
                 )}
-                {busy ||
-                  (step < drafts.length - 1
-                    ? "确认，下一条"
-                    : edit
-                      ? "保存更改"
-                      : "保存订阅")}
+                {busy || (edit ? "保存更改" : "保存订阅")}
               </button>
             </div>
           </>
