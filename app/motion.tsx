@@ -148,14 +148,11 @@ export function DialogLayer({
     sheet.inert = true;
     // Start the exit at the current entrance pose, even if the user taps close immediately.
     const current = getComputedStyle(sheet);
-    const mobile = window.matchMedia("(max-width:680px)").matches;
     const exit = sheet.animate(
       [
         { transform: current.transform, opacity: current.opacity },
         {
-          transform: mobile
-            ? "translate3d(0,50px,0)"
-            : "translate3d(0,9px,0) scale(.985)",
+          transform: current.getPropertyValue("--sheet-exit").trim() || "translate3d(0,9px,0) scale(.985)",
           opacity: 0,
         },
       ],

@@ -633,7 +633,7 @@ export default function Wallet({ initialToday, release }: { initialToday: string
     </nav>
   );
   return (
-    <div className="shell">
+    <div className="shell walletShell">
       <header className="masthead" inert={dialogOpen}>
         <div className="mastInner">
           <a className="homeIcon" href="/" aria-label="卡包首页">

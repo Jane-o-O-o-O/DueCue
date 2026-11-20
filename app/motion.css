@@ -113,12 +113,6 @@ summary:active {
     grid-auto-columns: 1fr;
   }
 }
-@media (max-width: 680px) {
-  .mobileNav {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-}
 .segments {
   display: grid;
   grid-template-columns: repeat(var(--slots), minmax(0, 1fr));
@@ -260,17 +254,12 @@ summary:active {
   animation: veilIn 180ms ease-out;
 }
 .modalLayer .sheet {
-  animation: sheetIn 270ms var(--settle);
+  animation: var(--sheet-entrance, sheetIn 270ms) var(--settle);
 }
 .toast {
   animation:
     toastIn 200ms var(--settle),
     toastOut 180ms ease-in 3320ms forwards;
-}
-@media (max-width: 680px) {
-  .modalLayer .sheet {
-    animation: drawerIn 300ms var(--settle);
-  }
 }
 @media (prefers-reduced-motion: reduce) {
   .shell *,
