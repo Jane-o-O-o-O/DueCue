@@ -34,10 +34,27 @@ function indexFiles(dir='') {
 }
 indexFiles();
 const mime = {'.js':'application/javascript','.mjs':'application/javascript','.css':'text/css','.png':'image/png',
+  '.html':'text/html; charset=utf-8','.webp':'image/webp','.jpg':'image/jpeg',
   '.svg':'image/svg+xml','.webmanifest':'application/manifest+json','.ico':'image/x-icon',
   '.json':'application/json','.woff2':'font/woff2','.wasm':'application/wasm','.txt':'text/plain','.gz':'application/gzip'};
 const installAssets = new Set(['/manifest.webmanifest','/manifest-en.webmanifest','/apple-touch-icon.png',
   '/favicon.ico','/icon-192.png','/icon-512.png']);
+const showcaseAssets = new Set([
+  'welcome.css', 'intro.js', 'share.jpg', 'statement.webp', 'parsed.webp', 'month.webp',
+  'chatgpt.png', 'icloud.png', 'netflix.png', 'instrument.woff2', 'dm-mono.woff2',
+  'assets/system.css', 'assets/system.js', 'assets/backgrounds/backgrounds.css',
+  'assets/layout/layout.css', 'assets/layout/layout.js',
+  'assets/motion/motion.css', 'assets/motion/motion.js',
+  'assets/ui/cards.css', 'assets/ui/ui.js',
+  'assets/moments/moments.js', 'assets/moments/lib.js',
+  'assets/moments/iris-opens/moment.css', 'assets/moments/iris-opens/moment.js',
+  'assets/LICENSE.txt', 'assets/OFL-DMMono.txt', 'assets/OFL-InstrumentSans.txt',
+].map(file => '/showcase/' + file));
+const showcaseHeaders = {
+  'Content-Security-Policy': "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; manifest-src 'self'; base-uri 'none'; frame-ancestors 'none'",
+  'Cache-Control': 'private, no-store, no-transform',
+  'Vary': 'Cookie',
+};
 function reply(res,status,text,headers={}) {
   res.writeHead(status,{'Content-Type':'text/plain; charset=utf-8','Cache-Control':'no-store',...headers});
   res.end(text);
@@ -55,20 +72,23 @@ async function handle(req,res) {
   const paymentServerRequest = req.method === 'POST' && ['/api/alipay/notify','/api/alipay/manage'].includes(url.pathname);
   const paymentResult = req.method === 'GET' && url.pathname === '/payment/result';
   const user = paymentServerRequest ? null : localSandbox ? 'local-sandbox' : identity(req);
-  const publicInstallAsset = installAssets.has(url.pathname) && ['GET','HEAD'].includes(req.method) && files.has(url.pathname);
-  if (!paymentServerRequest && !paymentResult && !user && !publicInstallAsset) {
+  const readOnly = req.method === 'GET' || req.method === 'HEAD';
+  const welcome = readOnly && (url.pathname === '/welcome' || (!user && url.pathname === '/' && !url.searchParams.has('brand')));
+  const publicAsset = readOnly && (installAssets.has(url.pathname) || showcaseAssets.has(url.pathname)) && files.has(url.pathname);
+  if (!paymentServerRequest && !paymentResult && !user && !publicAsset && !welcome) {
     if (req.method === 'GET' && ['/','/cards','/brands'].includes(url.pathname)) {
       res.writeHead(303,{Location:'/login?next='+encodeURIComponent(url.pathname + url.search),'Cache-Control':'no-store'});
       return res.end();
     }
     return reply(res,401,'请登录知期');
   }
-  const file = files.get(url.pathname);
-  if (file && (req.method === 'GET' || req.method === 'HEAD')) {
+  const file = files.get(welcome ? '/showcase/welcome.html' : url.pathname);
+  if (file && readOnly) {
     const suffix=extname(file), permanent=url.pathname.startsWith('/_next/static/');
     res.writeHead(200,{'Content-Type':mime[suffix] || 'application/octet-stream',
       'Content-Length':(await stat(file)).size,'X-Content-Type-Options':'nosniff',
-      'Cache-Control':permanent?'private, max-age=31536000, immutable':'private, max-age=0, must-revalidate'});
+      'Cache-Control':permanent?'private, max-age=31536000, immutable':'private, max-age=0, must-revalidate',
+      ...(welcome ? showcaseHeaders : {})});
     if(req.method === 'HEAD') return res.end();
     await pipeline(createReadStream(file),res); return;
   }

@@ -14,12 +14,13 @@ function amountText(amount: number) {
 
 export function plan(uid: string) {
   const env = runtime();
-  if (env.ALIPAY_TEST_OWNER && env.ALIPAY_TEST_OWNER !== uid) return null;
+  const preview = env.ALIPAY_REVIEW_OWNER === uid;
+  if (!preview && env.ALIPAY_TEST_OWNER && env.ALIPAY_TEST_OWNER !== uid) return null;
   const price = cents(env.PLAN_PRICE_CNY);
   const days = Number(env.PLAN_DAYS);
   if (!price || price > 10_000_000_000 || !Number.isInteger(days) || days < 1 || days > 3660)
     return null;
-  return { price: amountText(price), days, ready: !!paymentSettings() };
+  return { price: amountText(price), days, ready: !preview && !!paymentSettings(), ...(preview && { preview }) };
 }
 
 export function checkoutForm(

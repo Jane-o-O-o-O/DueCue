@@ -932,6 +932,14 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
                               : "首次保存订阅或完成解析时开始计时。"}</small>
                           </div>
                         </div>
+                        {!member.permanent && plan?.preview && (
+                          <details className="membershipPreview">
+                            <summary>查看支付宝购买演示</summary>
+                            <p><b>¥{plan.price}</b> · 知期 {plan.days} 天使用权</p>
+                            <p>核对时长和金额，再进入支付宝收银台。知期确认到账后，会延长当前账号的使用时长。</p>
+                            <small>演示套餐 · 商户收款额度审核中</small>
+                          </details>
+                        )}
                         {!member.permanent && plan?.ready && (
                           <button className="primary membershipPurchase" disabled={purchasing} aria-busy={purchasing}
                             onClick={async () => {

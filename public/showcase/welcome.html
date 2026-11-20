@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="zh-CN" data-type="software" data-radius="round" data-buttons="arrow" data-motion data-ground="sky">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="page-type" content="software">
+  <meta name="site-kind" content="software">
+  <meta name="description" content="用知期记录订阅金额与扣费日期，从账单截图添加订阅，再用日历查看下一次续费。">
+  <meta property="og:title" content="知期 · 订阅卡包">
+  <meta property="og:description" content="用知期记录订阅金额与扣费日期，从账单截图添加订阅，再用日历查看下一次续费。">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://duecue.jane-zz.online/showcase/share.jpg">
+  <meta property="og:url" content="https://duecue.jane-zz.online/welcome">
+  <meta name="twitter:card" content="summary_large_image">
+  <title>知期 · 订阅卡包</title>
+  <link rel="canonical" href="https://duecue.jane-zz.online/welcome">
+  <link rel="icon" href="/icon-192.png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="stylesheet" href="/showcase/assets/system.css">
+  <link rel="stylesheet" href="/showcase/assets/ui/cards.css">
+  <link rel="stylesheet" href="/showcase/assets/motion/motion.css">
+  <link rel="stylesheet" href="/showcase/assets/backgrounds/backgrounds.css">
+  <link rel="stylesheet" href="/showcase/assets/layout/layout.css">
+  <link rel="stylesheet" href="/showcase/welcome.css">
+  <script src="/showcase/intro.js"></script>
+</head>
+<body>
+  <!-- Software. White-link-blue, Instrument, split, centre nav, arrow, dark band, iris, word close. -->
+  <header class="nav nav--centre">
+    <div class="wrap nav__bar">
+      <a class="skip-link" href="#top">跳到正文</a>
+      <a class="nav__logo" href="#top"><img src="/icon-192.png" width="29" height="29" alt="">知期</a>
+      <nav class="nav__links" aria-label="网站导航">
+        <div class="nav__item"><a class="nav__link" href="#import">截图导入</a></div>
+        <div class="nav__item"><a class="nav__link" href="#calendar">到期日历</a></div>
+        <div class="nav__item"><a class="nav__link" href="#install">安装到 iPhone</a></div>
+      </nav>
+      <div class="nav__actions">
+        <a class="nav__link sign-in" href="/login">登录</a>
+      </div>
+      <button class="nav__toggle" type="button" aria-expanded="false" aria-label="导航菜单">
+        <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 6.5h14M3 13.5h14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+  </header>
+  <main id="top">
+    <section class="hero hero--split" data-enter aria-labelledby="hero-h">
+      <div class="wrap">
+        <div class="hero-text grid hero__grid">
+          <div class="hero__text span-5">
+            <h1 id="hero-h">你的<span class="hero-break">订阅卡包</span></h1>
+            <p class="hero__lead">把会员、AI 订阅和话费放在一起，随时查看扣费金额和续费日期。</p>
+            <div class="btn-row">
+              <a class="btn btn--primary" href="/login?mode=email">开始试用<svg class="m-arrow" viewBox="0 0 12 12" aria-hidden="true"><path class="m-arrow__stem" d="M1 6h8"/><path class="m-arrow__head" d="M4.5 2.5 8 6l-3.5 3.5"/></svg></a>
+            </div>
+            <p class="trial-note">7 天试用 · 首次保存订阅或完成解析后开始</p>
+          </div>
+          <div class="hero__media span-6 start-7 wallet-stage" data-enter-media>
+            <div class="app wallet" role="img" aria-label="知期订阅卡包，当前展示 Netflix 和下次扣费">
+              <div class="wallet-head"><span>订阅卡包</span></div>
+              <div class="wallet-stack">
+                <div class="wallet-card wallet-chatgpt"><span class="wallet-service"><img src="/showcase/chatgpt.png" alt="" width="22" height="22">ChatGPT Plus</span><span class="wallet-cycle">每月</span></div>
+                <div class="wallet-card wallet-icloud"><span class="wallet-service"><img src="/showcase/icloud.png" alt="" width="22" height="22">iCloud+</span><span class="wallet-cycle">每月</span></div>
+                <div class="wallet-card wallet-netflix">
+                  <div class="wallet-card-top"><span class="wallet-service"><img src="/showcase/netflix.png" alt="" width="22" height="22">Netflix</span><span class="wallet-cycle">手动确认</span></div>
+                  <div class="wallet-card-bottom">
+                    <div><span class="wallet-label">已扣款</span><span class="wallet-money"><small>US$</small>15.49</span></div>
+                    <div class="wallet-date"><span class="wallet-label">交易日期</span><span>11 月 17 日</span></div>
+                  </div>
+                </div>
+              </div>
+              <div class="wallet-next">
+                <div class="wallet-next-date"><b>23</b><span>11 月</span></div>
+                <div class="wallet-next-name"><b>ChatGPT Plus</b><span>即将续费</span></div>
+                <span class="wallet-next-price">US$20.00</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="import" aria-labelledby="import-h">
+      <div class="wrap">
+        <div class="grid section-intro">
+          <h2 id="import-h" class="span-6">截图导入订阅</h2>
+          <p class="span-6">选一张账单截图，知期会填好服务名称、金额和日期。核对后就能保存到卡包。</p>
+        </div>
+        <div class="import-stage" role="group" aria-label="原始账单和知期核对页面">
+          <div class="import-pane"><img class="receipt" src="/showcase/statement.webp" width="460" height="480" loading="lazy" alt="Notion Plus 演示账单"></div>
+          <div class="import-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M4 12h15m-6-6 6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="import-pane"><img class="parsed" src="/showcase/parsed.webp" width="430" height="603" loading="lazy" alt="知期核对订阅界面，已填入 Notion Plus、12 美元及 12 月 3 日"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section ground-inverse calendar-section" id="calendar" data-moment="iris-opens" data-moment-opts='{"from":"base"}' aria-labelledby="calendar-h">
+      <div class="wrap grid calendar-layout">
+        <div class="span-5 calendar-text">
+          <h2 id="calendar-h">续费都在日历上</h2>
+          <p>点开日期，查看当天有哪些订阅续费、各扣多少。</p>
+          <div class="calendar-detail">
+            <span class="calendar-day">23</span>
+            <div><span>11 月 · 星期一</span><strong>ChatGPT Plus</strong><span>US$20.00</span></div>
+          </div>
+        </div>
+        <div class="span-6 start-7 calendar-stage">
+          <img src="/showcase/month.webp" width="430" height="707" loading="lazy" alt="知期到期日历，11 月 23 日有 ChatGPT Plus 续费，26 日有 iCloud+ 续费">
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="closing footer--statement" id="install" aria-labelledby="install-h">
+    <div class="wrap">
+      <div class="closing__cta close--word">
+        <div class="closing-head">
+          <div>
+            <h2 id="install-h">把知期放到主屏幕</h2>
+            <p>用 Safari 打开知期，点「分享」→「添加到主屏幕」。</p>
+          </div>
+          <a class="btn btn--primary" href="/login?mode=email">开始试用<svg class="m-arrow" viewBox="0 0 12 12" aria-hidden="true"><path class="m-arrow__stem" d="M1 6h8"/><path class="m-arrow__head" d="M4.5 2.5 8 6l-3.5 3.5"/></svg></a>
+        </div>
+        <div class="closing-brand" aria-label="DueCue"><img src="/icon-192.png" width="192" height="192" loading="lazy" alt=""><span aria-hidden="true">DueCue</span></div>
+      </div>
+      <div class="closing__links">
+        <div class="footer-notes">
+          <div><h3>使用时长</h3><p>试用结束后仍可查看已有记录，也可在设置中兑换时长。</p></div>
+          <div><h3>账单数据</h3><p>开始解析时会上传截图。保存后，可在卡包编辑或删除订阅记录。</p></div>
+        </div>
+        <div class="footer__legal"><span>© 2026 知期 DueCue</span><span>各服务名称与图标归其权利人所有。</span></div>
+      </div>
+    </div>
+  </footer>
+  <script type="module" src="/showcase/assets/system.js"></script>
+  <script type="module" src="/showcase/assets/motion/motion.js"></script>
+  <script type="module" src="/showcase/assets/layout/layout.js"></script>
+</body>
+</html>

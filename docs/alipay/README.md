@@ -23,4 +23,6 @@
 
 知期已实现网页收银台、通知验签、主动查单和权益发放。正式站的配置位于 VPS 的 `/etc/duecue/app.env`。使用已开通 AI 网页应用收款的 AppID，配合同一应用的 RSA2 应用私钥与支付宝公钥。收款主体的 PID 填入 `ALIPAY_SELLER_ID`。价格和天数分别由 `PLAN_PRICE_CNY` 与 `PLAN_DAYS` 设置。VPS 实付测试时将 `ALIPAY_TEST_OWNER` 设为测试账号的用户标识，只向该账号开放购买；对外收款前清除该项。使用另一支付宝账号小额实付，确认到账状态和时长发放。
 
+VPS 的 `ALIPAY_REVIEW_OWNER` 可指定独立的审核账号，向该账号显示购买流程演示。该账号的下单接口由服务端禁用。构建账户版后运行 `node scripts/test-payment-notifications.mjs`，可在隔离 SQLite 和一次性 RSA 密钥下验证回调验签、金额与收款方校验、无需浏览器回跳的权益发放及重复通知。
+
 官方 Markdown 原文可在后续开发时刷新。[Vibe Pay 原文](https://aipay.alipay.com/docs/vibe-pay.md) · [网页接入指南原文](https://aipay.alipay.com/docs/vibe-pay/ai-web-app-payment-qianyi/ai-web-app-payment-integration-guide.md)

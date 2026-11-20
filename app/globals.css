@@ -815,6 +815,18 @@ h1 {
 .settingArrow { flex: none; color: #777188; }
 .memberHero { background: #fbf9ff; }
 .membershipPurchase { margin: 0 14px 12px; }
+.membershipPreview {
+  margin: 0 14px 12px;
+  padding: 10px 13px;
+  border: 1px solid #e9def9;
+  border-radius: 14px;
+  background: #fcfaff;
+  color: #382968;
+  font-size: 14px;
+}
+.membershipPreview summary { cursor: pointer; font-weight: 650; }
+.membershipPreview p { margin: 8px 0; line-height: 1.6; }
+.membershipPreview small { color: #62527e; }
 .settingHelp {
   display: flex;
   align-items: center;
