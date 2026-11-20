@@ -21,6 +21,7 @@ import {
   MessageSquarePlus,
   LibraryBig,
   FlaskConical,
+  Coins,
   type LucideIcon,
 } from "lucide-react";
 import { catalog } from "../public/catalog-data.js";
@@ -30,6 +31,7 @@ import { CardRequests } from "./card-requests";
 import { RedeemTime } from "./redeem-time";
 import { BrandIcon } from "./brand-icon";
 import { WalletCard } from "./wallet-card";
+import { defaultForecastDays, ForecastCurrencyChoice, ForecastSettings, parseForecastDays, RenewalForecast, type ForecastOptions } from "./renewal-forecast";
 import {
   examples,
   kinds,
@@ -41,9 +43,8 @@ import {
   money,
   calendarFile,
   Entry,
-  shift,
 } from "@/lib/records";
-import { atOrAfter, occurrencesBetween } from "@/lib/recurrence";
+import { atOrAfter } from "@/lib/recurrence";
 import Importer, { requestJSON, type ImportMode } from "./importer";
 import {
   DialogLayer,
@@ -60,6 +61,8 @@ const tabs = [
   { key: "settings", name: "设置", Icon: Settings2 },
 ] as const;
 type SettingsPage = "home" | "feedback" | "redeem";
+const currencyPreference = "youqi:forecast-currency";
+const daysPreference = "youqi:forecast-days";
 function SettingsRow({ icon: Icon, title, caption, tone = "purple", href, onClick }: {
   icon: LucideIcon;
   title: string;
@@ -276,6 +279,9 @@ export default function Wallet({ initialToday, release }: { initialToday: string
     [refreshing, setRefreshing] = useState(false),
     [navDirection, setNavDirection] = useState(1);
   const [availableVersion, setAvailableVersion] = useState("");
+  const [forecast, setForecast] = useState<ForecastOptions>({ days: defaultForecastDays, currency: "CNY" });
+  const [forecastOpen, setForecastOpen] = useState(false);
+  const dialogOpen = !!(imp || detail || forecastOpen);
   const dialog = useRef<DialogControl>(null);
   const opener = useRef<HTMLElement | null>(null);
   const ghosts = useRef<HTMLDivElement>(null);
@@ -287,13 +293,22 @@ export default function Wallet({ initialToday, release }: { initialToday: string
     if (search) searchInput.current?.focus({ preventScroll: true });
   }, [search]);
   useEffect(() => watchAppVersion(release, setAvailableVersion), [release]);
-  const canUpdate = (walletReady || !!dbError) && !imp && !detail && !pending &&
+  const canUpdate = (walletReady || !!dbError) && !dialogOpen && !pending &&
     !purchasing && !refreshing && !search && settingsPage === "home";
   useEffect(() => {
     if (canUpdate && availableVersion) applyAppVersion(availableVersion);
   }, [canUpdate, availableVersion]);
   function rememberOpener() {
-    if (!detail && !imp) opener.current = document.activeElement as HTMLElement;
+    if (!dialogOpen) opener.current = document.activeElement as HTMLElement;
+  }
+  function saveForecast(next: ForecastOptions) {
+    setForecast(next);
+    try {
+      localStorage.setItem(currencyPreference, next.currency);
+      localStorage.setItem(daysPreference, String(next.days));
+    } catch {
+      // The choice still applies to the current view.
+    }
   }
   async function refresh() {
     try {
@@ -333,6 +348,14 @@ export default function Wallet({ initialToday, release }: { initialToday: string
       setTab(match?.key || "overview");
     };
     restoreTab();
+    try {
+      setForecast({
+        currency: localStorage.getItem(currencyPreference) === "USD" ? "USD" : "CNY",
+        days: parseForecastDays(localStorage.getItem(daysPreference)) ?? defaultForecastDays,
+      });
+    } catch {
+      // Storage may be unavailable inside a private session.
+    }
     window.addEventListener("hashchange", restoreTab);
     setToday(iso(new Date()));
     refresh();
@@ -354,6 +377,7 @@ export default function Wallet({ initialToday, release }: { initialToday: string
     return () => clearTimeout(id);
   }, [msg]);
   function finishDismiss() {
+    setForecastOpen(false);
     setCatalogBrand("");
     D(null);
     E(undefined);
@@ -370,12 +394,6 @@ export default function Wallet({ initialToday, release }: { initialToday: string
     ),
     upcoming = ordered.filter((e) => e.date && daysLeft(e.date, today) >= 0),
     curr = items.length ? items[index % items.length] : null,
-    expected = originals
-      .filter((e) => e.kind === "自动续费" && e.amount)
-      .flatMap((e) => occurrencesBetween(e, today, shift(today, 30))),
-    total = expected
-      .filter((e) => e.currency === "CNY")
-      .reduce((n, e) => n + Number(e.amount), 0),
     deckSize = Math.min(6, items.length),
     hiddenCount = items.length - deckSize,
     folded = hiddenCount ? items[(index + deckSize) % items.length] : null;
@@ -590,7 +608,7 @@ export default function Wallet({ initialToday, release }: { initialToday: string
     <nav
       className={mode === "desktop" ? "desktopNav" : "mobileNav"}
       style={{ "--choice": tabIndex } as React.CSSProperties}
-      inert={!!(detail || imp)}
+      inert={dialogOpen}
       aria-label="主导航"
     >
       {tabs.map(({ key, name, Icon }) => (
@@ -608,7 +626,7 @@ export default function Wallet({ initialToday, release }: { initialToday: string
   );
   return (
     <div className="shell">
-      <header className="masthead">
+      <header className="masthead" inert={dialogOpen}>
         <div className="mastInner">
           <a className="homeIcon" href="/" aria-label="卡包首页">
             <img src="/apple-touch-icon.png" width="34" height="34" alt="" />
@@ -618,7 +636,7 @@ export default function Wallet({ initialToday, release }: { initialToday: string
       </header>
       <main
         className={tab === "overview" ? "walletApp walletHome" : "walletApp"}
-        inert={!!(detail || imp)}
+        inert={dialogOpen}
         style={{ "--direction": navDirection } as React.CSSProperties}
       >
         <header className="pageHeader">
@@ -844,34 +862,10 @@ export default function Wallet({ initialToday, release }: { initialToday: string
                   )}
                 </section>
                 <div className="overviewSide">
-                  <section className="forecast" aria-label="未来三十天续费">
-                    <span>
-                      30 天内预计续费
-                      {expected.some((e) => e.currency !== "CNY") && (
-                        <small>仅计人民币</small>
-                      )}
-                    </span>
-                    <strong>¥{total.toFixed(2)}</strong>
-                    {total > 0 && (
-                      <span className="spendBar" aria-hidden="true">
-                        {expected
-                          .filter(
-                            (e) => e.currency === "CNY" && Number(e.amount) > 0,
-                          )
-                          .map((e) => (
-                            <i
-                              key={e.id + e.date}
-                              style={{
-                                flexGrow: Number(e.amount),
-                                background: (brands as any)[
-                                  identifyBrand(e.name)
-                                ].color,
-                              }}
-                            />
-                          ))}
-                      </span>
-                    )}
-                  </section>
+                  <RenewalForecast entries={originals} today={today} {...forecast} onSettings={(button) => {
+                    opener.current = button;
+                    setForecastOpen(true);
+                  }} />
                   <section className="upcoming">
                     {heading(
                       "近期事项",
@@ -982,6 +976,12 @@ export default function Wallet({ initialToday, release }: { initialToday: string
                   <section className="settingsGroup" aria-labelledby="toolPrefsTitle">
                     <h2 id="toolPrefsTitle">卡片与工具</h2>
                     <div className="settingsCard">
+                      <div className="settingRow">
+                        <span className="settingIcon tone-teal"><Coins size={18} aria-hidden="true" /></span>
+                        <span className="settingText"><b>汇总币种</b><small>卡包近期续费</small></span>
+                        <ForecastCurrencyChoice currency={forecast.currency} label="汇总币种"
+                          onChange={(currency) => saveForecast({ ...forecast, currency })} />
+                      </div>
                       {import.meta.env.VITE_DUECUE_ACCOUNTS === "1" && (
                         <SettingsRow icon={MessageSquarePlus} title="卡片留言" caption="建议添加一张新卡片" tone="purple"
                           onClick={() => setSettingsPage("feedback")} />
@@ -1006,12 +1006,16 @@ export default function Wallet({ initialToday, release }: { initialToday: string
         </div>}
       </main>
       {navigation("mobile")}
-      {(detail || imp) && (
+      {dialogOpen && (
         <DialogLayer
           controller={dialog}
           onDismiss={finishDismiss}
           returnFocus={opener}
         >
+          {forecastOpen && <ForecastSettings current={forecast} close={close} onSave={(next) => {
+            saveForecast(next);
+            close();
+          }} />}
           {detail && !imp && (
             <section
               className="sheet"

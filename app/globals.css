@@ -396,12 +396,16 @@ h1 {
   background: #fff;
   border-radius: 18px;
   border: 1px solid var(--line);
+  width: 100%;
+  min-width: 0;
+  text-align: left;
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: minmax(0, 1fr) minmax(0, auto);
   gap: 9px 12px;
   padding: 17px 18px;
   align-items: center;
 }
+.forecast:hover { border-color: #d3cbe7; }
 .forecast > span:first-child {
   font-weight: 600;
   font-size: 14px;
@@ -415,7 +419,11 @@ h1 {
 .forecast strong {
   font-size: 25px;
   letter-spacing: -0.045em;
+  overflow-wrap: anywhere;
 }
+.forecastValue { display: flex; align-items: center; gap: 5px; text-align: right; }
+.forecastValue svg { flex: none; color: #777188; }
+.forecastBreakdown { grid-column: 1/-1; }
 .spendBar {
   display: flex;
   gap: 3px;
@@ -812,6 +820,38 @@ h1 {
 .settingText b, .settingText small { display: block; }
 .settingText b { font-size: 15px; font-weight: 660; }
 .settingText small { color: #6e6879; font-size: 12px; margin-top: 2px; }
+.currencyChoice,
+.forecastPresets {
+  display: inline-flex;
+  flex: none;
+  padding: 3px;
+  background: #f1eef6;
+  border-radius: 12px;
+}
+:is(.currencyChoice, .forecastPresets) button {
+  min-height: 44px;
+  padding: 0 10px;
+  color: #554d65;
+  border-radius: 9px;
+  font-size: 13px;
+  white-space: nowrap;
+}
+:is(.currencyChoice, .forecastPresets) button[aria-pressed="true"] {
+  color: #45316f;
+  background: #fff;
+  box-shadow: 0 1px 3px #28213a1a;
+  font-weight: 650;
+}
+:is(.currencyChoice, .forecastPresets) button:focus-visible { outline: 2px solid #9289e7; outline-offset: -2px; }
+.forecastPresets { display: flex; margin-top: 8px; }
+.forecastPresets button { flex: 1; padding-inline: 6px; }
+.forecastForm { display: grid; gap: 14px; }
+.forecastForm input { min-height: 44px; font-size: 16px; }
+.forecastForm small { display: block; color: #6e6879; font-size: 12px; }
+.forecastForm input + small { margin-top: 5px; }
+.forecastCurrencyRow { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.forecastCurrencyRow > span { font-size: 14px; font-weight: 650; }
+.forecastForm .actions { margin-top: 0; }
 .settingArrow { flex: none; color: #777188; }
 .memberHero { background: #fbf9ff; }
 .membershipPurchase { margin: 0 14px 12px; }
