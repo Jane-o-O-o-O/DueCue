@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { catalog } from "../public/catalog-data.js";
 import { brands, identifyBrand } from "../public/brands.js";
+import { applyAppVersion, watchAppVersion } from "../public/app-update.js";
 import { CardRequests } from "./card-requests";
 import { RedeemTime } from "./redeem-time";
 import { BrandIcon } from "./brand-icon";
@@ -249,7 +250,7 @@ function Month({
     </div>
   );
 }
-export default function Wallet({ initialToday }: { initialToday: string }) {
+export default function Wallet({ initialToday, release }: { initialToday: string; release: string }) {
   const [today, setToday] = useState(initialToday),
     [live, setLive] = useState<Entry[]>([]),
     [member, setMember] = useState<any>({ active: true, started: 0 }),
@@ -274,6 +275,7 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
     [purchasing, setPurchasing] = useState(false),
     [refreshing, setRefreshing] = useState(false),
     [navDirection, setNavDirection] = useState(1);
+  const [availableVersion, setAvailableVersion] = useState("");
   const dialog = useRef<DialogControl>(null);
   const opener = useRef<HTMLElement | null>(null);
   const ghosts = useRef<HTMLDivElement>(null);
@@ -284,6 +286,12 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
   useEffect(() => {
     if (search) searchInput.current?.focus({ preventScroll: true });
   }, [search]);
+  useEffect(() => watchAppVersion(release, setAvailableVersion), [release]);
+  const canUpdate = (walletReady || !!dbError) && !imp && !detail && !pending &&
+    !purchasing && !refreshing && !search && settingsPage === "home";
+  useEffect(() => {
+    if (canUpdate && availableVersion) applyAppVersion(availableVersion);
+  }, [canUpdate, availableVersion]);
   function rememberOpener() {
     if (!detail && !imp) opener.current = document.activeElement as HTMLElement;
   }

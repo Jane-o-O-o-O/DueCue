@@ -1,8 +1,9 @@
 import {registerHooks} from 'node:module';
 import {createServer} from 'node:http';
+import {createHash} from 'node:crypto';
 import {identity,accountRoute,allow} from './accounts.mjs';
 import {redeemCode} from './redemption.mjs';
-import {readdirSync,createReadStream} from 'node:fs';
+import {readdirSync,readFileSync,createReadStream} from 'node:fs';
 import {stat} from 'node:fs/promises';
 import {join,extname} from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -24,6 +25,14 @@ const {default: app, reconcilePendingPayments} = await import(new URL('server/in
 const cardRequests = localSandbox ? null : await import('./card-requests.mjs');
 const files = new Map();
 const staticRoot = fileURLToPath(new URL('client/',buildDir));
+const welcomeTemplate = readFileSync(join(staticRoot,'showcase/welcome.html'),'utf8');
+const releaseHash = createHash('sha256').update(welcomeTemplate);
+for (const path of ['server/index.js','client/vinext-client-entry-manifest.json',
+  'client/showcase/welcome.css','client/showcase/intro.js','client/app-update.js']) {
+  releaseHash.update(readFileSync(new URL(path,buildDir)));
+}
+const release = releaseHash.digest('hex').slice(0,20);
+const welcomePage = welcomeTemplate.replace('content="__DUECUE_RELEASE__"',`content="${release}"`);
 function indexFiles(dir='') {
   for (const entry of readdirSync(join(staticRoot,dir),{withFileTypes:true})) {
     if (entry.name.startsWith('.') || entry.name === '_headers') continue;
@@ -38,7 +47,7 @@ const mime = {'.js':'application/javascript','.mjs':'application/javascript','.c
   '.svg':'image/svg+xml','.webmanifest':'application/manifest+json','.ico':'image/x-icon',
   '.json':'application/json','.woff2':'font/woff2','.wasm':'application/wasm','.txt':'text/plain','.gz':'application/gzip'};
 const installAssets = new Set(['/manifest.webmanifest','/manifest-en.webmanifest','/apple-touch-icon.png',
-  '/favicon.ico','/icon-192.png','/icon-512.png']);
+  '/favicon.ico','/icon-192.png','/icon-512.png','/app-update.js']);
 const showcaseAssets = new Set([
   'welcome.css', 'intro.js', 'share.jpg', 'statement.webp', 'parsed.webp', 'month.webp',
   'chatgpt.png', 'icloud.png', 'netflix.png', 'instrument.woff2', 'dm-mono.woff2',
@@ -51,7 +60,7 @@ const showcaseAssets = new Set([
   'assets/LICENSE.txt', 'assets/OFL-DMMono.txt', 'assets/OFL-InstrumentSans.txt',
 ].map(file => '/showcase/' + file));
 const showcaseHeaders = {
-  'Content-Security-Policy': "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; manifest-src 'self'; base-uri 'none'; frame-ancestors 'none'",
+  'Content-Security-Policy': "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; manifest-src 'self'; base-uri 'none'; frame-ancestors 'none'",
   'Cache-Control': 'private, no-store, no-transform',
   'Vary': 'Cookie',
 };
@@ -66,29 +75,37 @@ async function handle(req,res) {
   if (req.method === 'GET' && url.pathname === '/healthz') {
     env.DB.prepare('SELECT 1').first(); return reply(res,200,'ok\n');
   }
+  const readOnly = req.method === 'GET' || req.method === 'HEAD';
+  if (readOnly && url.pathname === '/api/app-version') {
+    return reply(res,200,req.method === 'HEAD' ? '' : release,{'Cache-Control':'no-store, no-transform'});
+  }
   if (url.pathname === '/login' || url.pathname === '/account' || url.pathname.startsWith('/auth/')) {
     return localSandbox ? reply(res,404,'Not found') : accountRoute(req,res,url);
   }
   const paymentServerRequest = req.method === 'POST' && ['/api/alipay/notify','/api/alipay/manage'].includes(url.pathname);
   const paymentResult = req.method === 'GET' && url.pathname === '/payment/result';
   const user = paymentServerRequest ? null : localSandbox ? 'local-sandbox' : identity(req);
-  const readOnly = req.method === 'GET' || req.method === 'HEAD';
   const welcome = readOnly && (url.pathname === '/welcome' || (!user && url.pathname === '/' && !url.searchParams.has('brand')));
+  if (welcome) {
+    return reply(res,200,req.method === 'HEAD' ? '' : welcomePage,{
+      ...showcaseHeaders, 'Content-Type':mime['.html'],
+      'Content-Length':Buffer.byteLength(welcomePage), 'X-Content-Type-Options':'nosniff',
+    });
+  }
   const publicAsset = readOnly && (installAssets.has(url.pathname) || showcaseAssets.has(url.pathname)) && files.has(url.pathname);
-  if (!paymentServerRequest && !paymentResult && !user && !publicAsset && !welcome) {
+  if (!paymentServerRequest && !paymentResult && !user && !publicAsset) {
     if (req.method === 'GET' && ['/','/cards','/brands'].includes(url.pathname)) {
       res.writeHead(303,{Location:'/login?next='+encodeURIComponent(url.pathname + url.search),'Cache-Control':'no-store'});
       return res.end();
     }
     return reply(res,401,'请登录知期');
   }
-  const file = files.get(welcome ? '/showcase/welcome.html' : url.pathname);
+  const file = files.get(url.pathname);
   if (file && readOnly) {
     const suffix=extname(file), permanent=url.pathname.startsWith('/_next/static/');
     res.writeHead(200,{'Content-Type':mime[suffix] || 'application/octet-stream',
       'Content-Length':(await stat(file)).size,'X-Content-Type-Options':'nosniff',
-      'Cache-Control':permanent?'private, max-age=31536000, immutable':'private, max-age=0, must-revalidate',
-      ...(welcome ? showcaseHeaders : {})});
+      'Cache-Control':permanent?'private, max-age=31536000, immutable':'private, max-age=0, must-revalidate'});
     if(req.method === 'HEAD') return res.end();
     await pipeline(createReadStream(file),res); return;
   }
@@ -98,6 +115,7 @@ async function handle(req,res) {
     if (typeof req.headers[name]==='string') headers.set(name,req.headers[name]);
   }
   if (user) headers.set('oai-authenticated-user-id',user);
+  headers.set('x-duecue-release',release);
   const init = {method:req.method,headers};
   if (!['GET','HEAD'].includes(req.method)) {
     const chunks=[]; let size=0;

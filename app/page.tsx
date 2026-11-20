@@ -1,8 +1,10 @@
+import { headers } from "next/headers";
 import Wallet from "./wallet";
 export const dynamic = "force-dynamic";
-export default function Page() {
+export default async function Page() {
   const today = new Intl.DateTimeFormat("sv-SE", {
     timeZone: "Asia/Shanghai",
   }).format(new Date());
-  return <Wallet initialToday={today} />;
+  const release = (await headers()).get("x-duecue-release") || "";
+  return <Wallet initialToday={today} release={release} />;
 }
