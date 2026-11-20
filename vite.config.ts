@@ -18,6 +18,7 @@ const managedLinux = readExecutionProfile() === "managed-linux";
 const localBindingConfig = {
   main: "./worker/index.ts",
   compatibility_flags: ["nodejs_compat"],
+  triggers: { crons: ["* * * * *"] },
   d1_databases: d1
     ? [
         {
@@ -45,6 +46,7 @@ export default defineConfig(async ({ command }) => {
 
   return {
     server: {
+      fs: { deny: [".env", ".env.*", "*.{crt,pem}", "**/.git/**", "**/.alipay-sandbox.json"] },
       ...(managedLinux
         ? { host: "0.0.0.0", allowedHosts: ["terminal.local"] }
         : {}),

@@ -1,6 +1,5 @@
 import {registerHooks} from 'node:module';
 import {createServer} from 'node:http';
-import {handleCardRequests} from './card-requests.mjs';
 import {identity,accountRoute,allow} from './accounts.mjs';
 import {redeemCode} from './redemption.mjs';
 import {readdirSync,createReadStream} from 'node:fs';
@@ -17,10 +16,14 @@ registerHooks({resolve(specifier, context, nextResolve) {
   return nextResolve(specifier,context);
 }});
 const {env} = await import('./bindings.mjs');
-const {default: app} = await import('./dist/server/index.js');
 const origin = new URL(process.env.PUBLIC_ORIGIN || 'https://duecue.jane-zz.online').origin;
+const localSandbox = process.env.DUECUE_SANDBOX_PREVIEW === '1' && env.ALIPAY_MODE === 'sandbox' &&
+  process.env.BIND_ADDRESS === '127.0.0.1' && new URL(origin).hostname === '127.0.0.1';
+const buildDir = new URL(localSandbox ? '../../dist/' : './dist/', import.meta.url);
+const {default: app, reconcilePendingPayments} = await import(new URL('server/index.js',buildDir).href);
+const cardRequests = localSandbox ? null : await import('./card-requests.mjs');
 const files = new Map();
-const staticRoot = fileURLToPath(new URL('./dist/client/',import.meta.url));
+const staticRoot = fileURLToPath(new URL('client/',buildDir));
 function indexFiles(dir='') {
   for (const entry of readdirSync(join(staticRoot,dir),{withFileTypes:true})) {
     if (entry.name.startsWith('.') || entry.name === '_headers') continue;
@@ -47,12 +50,13 @@ async function handle(req,res) {
     env.DB.prepare('SELECT 1').first(); return reply(res,200,'ok\n');
   }
   if (url.pathname === '/login' || url.pathname === '/account' || url.pathname.startsWith('/auth/')) {
-    return accountRoute(req,res,url);
+    return localSandbox ? reply(res,404,'Not found') : accountRoute(req,res,url);
   }
-  const callback = req.method === 'POST' && url.pathname === '/api/alipay/notify';
-  const user = callback ? null : identity(req);
+  const paymentServerRequest = req.method === 'POST' && ['/api/alipay/notify','/api/alipay/manage'].includes(url.pathname);
+  const paymentResult = req.method === 'GET' && url.pathname === '/payment/result';
+  const user = paymentServerRequest ? null : localSandbox ? 'local-sandbox' : identity(req);
   const publicInstallAsset = installAssets.has(url.pathname) && ['GET','HEAD'].includes(req.method) && files.has(url.pathname);
-  if (!callback && !user && !publicInstallAsset) {
+  if (!paymentServerRequest && !paymentResult && !user && !publicInstallAsset) {
     if (req.method === 'GET' && ['/','/cards','/brands'].includes(url.pathname)) {
       res.writeHead(303,{Location:'/login?next='+encodeURIComponent(url.pathname + url.search),'Cache-Control':'no-store'});
       return res.end();
@@ -69,11 +73,11 @@ async function handle(req,res) {
     await pipeline(createReadStream(file),res); return;
   }
   const headers = new Headers();
-  for (const name of ['accept','accept-language','content-type','origin','referer','sec-fetch-site','user-agent','rsc',
+  for (const name of ['accept','accept-language','content-type','origin','referer','sec-fetch-site','user-agent','authorization','rsc',
     'next-router-state-tree','next-router-prefetch','next-url']) {
     if (typeof req.headers[name]==='string') headers.set(name,req.headers[name]);
   }
-  if (!callback) headers.set('oai-authenticated-user-id',user);
+  if (user) headers.set('oai-authenticated-user-id',user);
   const init = {method:req.method,headers};
   if (!['GET','HEAD'].includes(req.method)) {
     const chunks=[]; let size=0;
@@ -103,7 +107,7 @@ async function handle(req,res) {
     }
     return reply(res,status,JSON.stringify(body),{'Content-Type':'application/json; charset=utf-8'});
   }
-  const result=url.pathname==='/api/card-requests' ? await handleCardRequests(request,user) : await app.fetch(request,env,{props:{},waitUntil(promise){
+  const result=url.pathname==='/api/card-requests' && cardRequests ? await cardRequests.handleCardRequests(request,user) : await app.fetch(request,env,{props:{},waitUntil(promise){
     Promise.resolve(promise).catch(()=>console.error('DueCue background job failed'));
   },passThroughOnException(){}});
   const outgoing=Object.fromEntries(result.headers);
@@ -120,3 +124,9 @@ server.requestTimeout=120000;
 server.listen(Number(process.env.PORT || 3000),process.env.BIND_ADDRESS || '127.0.0.1',()=>{
   console.log('DueCue started for '+origin);
 });
+
+if (env.ALIPAY_MODE) {
+  const reconcile = () => reconcilePendingPayments().catch(() => console.warn('Alipay reconciliation deferred'));
+  void reconcile();
+  setInterval(reconcile, 15_000).unref();
+}

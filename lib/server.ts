@@ -17,16 +17,19 @@ export function json(value: unknown, status = 200) {
 export async function entitlement(uid: string) {
   const { DB } = runtime();
   const m = await DB.prepare(
-    "SELECT started,paid_until FROM members WHERE owner=?",
+    "SELECT started,paid_until,permanent FROM members WHERE owner=?",
   )
     .bind(uid)
-    .first<{ started: number; paid_until: number }>();
-  const end = m ? Math.max(m.started + week, m.paid_until) : 0;
+    .first<{ started: number; paid_until: number; permanent: number }>();
+  const permanent = m?.permanent === 1;
+  const end = m && !permanent ? Math.max(m.started + week, m.paid_until) : 0;
+  const now = Date.now();
   return {
     started: m?.started || 0,
     end,
-    active: !m || end > Date.now(),
-    paid: (m?.paid_until || 0) > Date.now(),
+    active: permanent || !m || end > now,
+    paid: permanent || (m?.paid_until || 0) > now,
+    permanent,
   };
 }
 export function trustedOrigin(req: Request) {

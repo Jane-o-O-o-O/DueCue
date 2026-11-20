@@ -18,10 +18,11 @@ export async function GET(req: Request) {
   )
     .bind(uid)
     .all<{ data: string }>();
+  const member = await entitlement(uid);
   return json({
     entries: result.results.map((r) => JSON.parse(r.data)),
-    member: await entitlement(uid),
-    plan: plan(),
+    member,
+    plan: member.permanent ? null : plan(uid),
     ai: !!runtime().OPENAI_API_KEY,
   });
 }

@@ -461,7 +461,7 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
       C(false);
       D(r);
     },
-    status = member.started
+    status = member.permanent ? "永久使用" : member.started
       ? member.active
         ? member.paid
           ? "会员有效"
@@ -927,18 +927,27 @@ export default function Wallet({ initialToday }: { initialToday: string }) {
                           <span className="settingIcon tone-purple"><SquareStack size={18} aria-hidden="true" /></span>
                           <div className="settingText">
                             <b>{status}</b>
-                            <small>{member.started
+                            <small>{member.permanent ? "使用权益长期有效" : member.started
                               ? "有效至 " + new Date(member.end).toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric" })
                               : "首次保存订阅或完成解析时开始计时。"}</small>
                           </div>
                         </div>
-                        {plan?.ready && (
+                        {!member.permanent && plan?.ready && (
                           <button className="primary membershipPurchase" disabled={purchasing} aria-busy={purchasing}
                             onClick={async () => {
                               setPurchasing(true);
                               try {
                                 const result = await requestJSON("/api/checkout", { method: "POST" });
-                                location.assign(result.url);
+                                if (result.paid) {
+                                  location.assign("/payment/result?out_trade_no=" + encodeURIComponent(result.orderId));
+                                  return;
+                                }
+                                const doc = new DOMParser().parseFromString(result.paymentHtml, "text/html");
+                                const paymentForm = doc.querySelector("form");
+                                if (!paymentForm) throw new Error("支付宝付款表单无效。");
+                                paymentForm.hidden = true;
+                                document.body.appendChild(paymentForm);
+                                HTMLFormElement.prototype.submit.call(paymentForm);
                               } catch (e) {
                                 setPurchasing(false);
                                 M(e instanceof Error ? e.message : "暂时无法打开支付宝。");

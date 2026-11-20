@@ -52,3 +52,4 @@ yarn-error.log*
 /deploy/vps/data/
 *.sqlite
 *.sqlite-*
+/.alipay-sandbox.json

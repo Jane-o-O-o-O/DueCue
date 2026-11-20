@@ -4,7 +4,7 @@ import { useState, type FormEvent } from "react";
 import { Ticket } from "lucide-react";
 import { requestJSON } from "./importer";
 
-type Membership = { started: number; end: number; active: boolean; paid: boolean };
+type Membership = { started: number; end: number; active: boolean; paid: boolean; permanent?: boolean };
 
 export function RedeemTime({ onRedeemed }: { onRedeemed: (member: Membership) => void }) {
   const [code, setCode] = useState("");
@@ -26,7 +26,9 @@ export function RedeemTime({ onRedeemed }: { onRedeemed: (member: Membership) =>
       });
       onRedeemed(result.member);
       setCode("");
-      setNotice(result.alreadyRedeemed ? "这枚兑换码的时长已到账。" : `兑换成功，已增加 ${result.days} 天。`);
+      setNotice(result.permanent
+        ? "永久使用权益已生效。"
+        : result.alreadyRedeemed ? "这枚兑换码的时长已到账。" : `兑换成功，已增加 ${result.days} 天。`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "暂时无法兑换，请稍后重试。");
     } finally {

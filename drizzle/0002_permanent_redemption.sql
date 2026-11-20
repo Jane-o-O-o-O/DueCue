@@ -1,0 +1,1 @@
+ALTER TABLE `members` ADD `permanent` integer DEFAULT false NOT NULL;
