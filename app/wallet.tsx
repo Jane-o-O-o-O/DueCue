@@ -989,7 +989,6 @@ export default function Wallet({ initialToday, release }: { initialToday: string
                       <SettingsRow icon={Layers3} title="全部卡面" href="/cards?from=settings" tone="blue" />
                       <SettingsRow icon={LibraryBig} title="国内会员目录" caption={`${catalog.length} 项会员与套餐`}
                         href="/brands?from=settings" tone="teal" />
-                      <SettingsRow icon={ScanLine} title="AI解析" caption="从截图添加订阅" tone="blue" onClick={() => start("image")} />
                       <SettingsRow icon={FlaskConical} title={demo ? "返回我的卡包" : "查看示例账本"} tone="amber"
                         onClick={() => {
                           localStorage.setItem("youqi:hide-demo", demo ? "yes" : "no");
