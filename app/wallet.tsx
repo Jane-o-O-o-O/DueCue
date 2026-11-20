@@ -41,9 +41,9 @@ import {
   dateFrom,
   daysLeft,
   money,
-  calendarFile,
   Entry,
 } from "@/lib/records";
+import { calendarFile } from "@/lib/calendar";
 import { atOrAfter } from "@/lib/recurrence";
 import Importer, { requestJSON, type ImportMode } from "./importer";
 import {
@@ -94,17 +94,20 @@ function due(s: string, t: string) {
         ? "已过 " + -n + " 天"
         : n + " 天后";
 }
-function download(e: Entry) {
+function download(e: Entry, today: string) {
+  const exported = calendarFile(e, today);
+  if (!exported) return;
   const url = URL.createObjectURL(
-    new Blob([calendarFile(e)], { type: "text/calendar;charset=utf-8" }),
+    new Blob([exported.contents], { type: "text/calendar;charset=utf-8" }),
   );
   const a = document.createElement("a");
   a.href = url;
-  a.download = e.name + ".ics";
+  a.download = exported.filename;
   document.body.appendChild(a);
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 45000);
+  return exported.start;
 }
 const calendarLabels: Record<string, string> = {
   自动续费: "续费",
@@ -283,6 +286,7 @@ export default function Wallet({ initialToday, release }: { initialToday: string
   const [forecastOpen, setForecastOpen] = useState(false);
   const dialogOpen = !!(imp || detail || forecastOpen);
   const dialog = useRef<DialogControl>(null);
+  const walletRequest = useRef(0);
   const opener = useRef<HTMLElement | null>(null);
   const ghosts = useRef<HTMLDivElement>(null);
   const searchInput = useRef<HTMLInputElement>(null);
@@ -311,8 +315,10 @@ export default function Wallet({ initialToday, release }: { initialToday: string
     }
   }
   async function refresh() {
+    const request = ++walletRequest.current;
     try {
       const s = await requestJSON("/api/wallet");
+      if (request !== walletRequest.current) return;
       setLive(s.entries);
       setMember(s.member);
       setPlan(s.plan);
@@ -339,7 +345,7 @@ export default function Wallet({ initialToday, release }: { initialToday: string
         }
       }
     } catch (e: any) {
-      setDbError(e.message);
+      if (request === walletRequest.current) setDbError(e.message);
     }
   }
   useEffect(() => {
@@ -455,6 +461,7 @@ export default function Wallet({ initialToday, release }: { initialToday: string
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ entries: data }),
     });
+    walletRequest.current++;
     setMember(v.member);
     setLive((old) => [
       ...data,
@@ -472,6 +479,7 @@ export default function Wallet({ initialToday, release }: { initialToday: string
       await requestJSON("/api/wallet?id=" + encodeURIComponent(detail.id), {
         method: "DELETE",
       });
+      walletRequest.current++;
       setLive((old) => old.filter((e) => e.id !== detail.id));
       close();
       setIndex(0);
@@ -1100,10 +1108,11 @@ export default function Wallet({ initialToday, release }: { initialToday: string
                       className="primary"
                       disabled={!detail.date}
                       onClick={() => {
-                        download(
+                        const start = download(
                           live.find((r) => r.id === detail.id) || detail,
+                          iso(new Date()),
                         );
-                        M("已生成日历文件");
+                        if (start) M(`已生成 ${shortDate(start)}的日历文件`);
                       }}
                     >
                       <Download size={16} />
