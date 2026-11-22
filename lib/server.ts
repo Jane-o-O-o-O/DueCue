@@ -1,7 +1,7 @@
 import { env } from "cloudflare:workers";
+import { membershipStatus } from "../deploy/vps/membership.mjs";
 export const runtime = () =>
   env as unknown as Record<string, string> & { DB: D1Database; SCREENSHOT_MODEL_URL?: string; SCREENSHOT_OPENAI_API_KEY?: string; SCREENSHOT_OPENAI_BASE_URL?: string; callScreenshotModel?: (body: string, signal: AbortSignal) => Promise<Response> };
-export const week = 7 * 86400000;
 export function owner(r: Request) {
   return (
     r.headers.get("oai-authenticated-user-id") ||
@@ -16,21 +16,18 @@ export function json(value: unknown, status = 200) {
 }
 export async function entitlement(uid: string) {
   const { DB } = runtime();
-  const m = await DB.prepare(
+  const membership = DB.prepare(
     "SELECT started,paid_until,permanent FROM members WHERE owner=?",
-  )
-    .bind(uid)
-    .first<{ started: number; paid_until: number; permanent: number }>();
-  const permanent = m?.permanent === 1;
-  const end = m && !permanent ? Math.max(m.started + week, m.paid_until) : 0;
-  const now = Date.now();
-  return {
-    started: m?.started || 0,
-    end,
-    active: permanent || !m || end > now,
-    paid: permanent || (m?.paid_until || 0) > now,
-    permanent,
-  };
+  ).bind(uid);
+  type StoredMembership = Parameters<typeof membershipStatus>[0];
+  let stored = await membership.first<StoredMembership>();
+  if (!stored) {
+    // A trusted upstream identity can exist without a registration in the VPS account service.
+    await DB.prepare("INSERT OR IGNORE INTO members(owner,started) VALUES(?,?)")
+      .bind(uid, Date.now()).run();
+    stored = await membership.first<StoredMembership>();
+  }
+  return membershipStatus(stored);
 }
 export function trustedOrigin(req: Request) {
   const origin = req.headers.get("origin");

@@ -17,6 +17,7 @@ import {
   PenLine,
   CalendarPlus,
   CircleUserRound,
+  Mail,
   Ticket,
   MessageSquarePlus,
   LibraryBig,
@@ -29,6 +30,8 @@ import { brands, identifyBrand } from "../public/brands.js";
 import { applyAppVersion, watchAppVersion } from "../public/app-update.js";
 import { CardRequests } from "./card-requests";
 import { RedeemTime } from "./redeem-time";
+import { requestPermanentCode } from "@/lib/support";
+import { DAY_MS, TRIAL_DAYS } from "../deploy/vps/membership.mjs";
 import { BrandIcon } from "./brand-icon";
 import { WalletCard } from "./wallet-card";
 import { defaultForecastDays, ForecastCurrencyChoice, ForecastSettings, parseForecastDays, RenewalForecast, type ForecastOptions } from "./renewal-forecast";
@@ -260,7 +263,6 @@ export default function Wallet({ initialToday, release }: { initialToday: string
   const [today, setToday] = useState(initialToday),
     [live, setLive] = useState<Entry[]>([]),
     [member, setMember] = useState<any>({ active: true, started: 0 }),
-    [plan, setPlan] = useState<any>(null),
     [dbError, setDbError] = useState(""),
     [walletReady, setWalletReady] = useState(false),
     [tab, setTab] = useState<Tab>("overview"),
@@ -278,7 +280,6 @@ export default function Wallet({ initialToday, release }: { initialToday: string
     [msg, M] = useState(""),
     [confirm, C] = useState(false),
     [pending, P] = useState(false),
-    [purchasing, setPurchasing] = useState(false),
     [refreshing, setRefreshing] = useState(false),
     [navDirection, setNavDirection] = useState(1);
   const [availableVersion, setAvailableVersion] = useState("");
@@ -298,7 +299,7 @@ export default function Wallet({ initialToday, release }: { initialToday: string
   }, [search]);
   useEffect(() => watchAppVersion(release, setAvailableVersion), [release]);
   const canUpdate = (walletReady || !!dbError) && !dialogOpen && !pending &&
-    !purchasing && !refreshing && !search && settingsPage === "home";
+    !refreshing && !search && settingsPage === "home";
   useEffect(() => {
     if (canUpdate && availableVersion) applyAppVersion(availableVersion);
   }, [canUpdate, availableVersion]);
@@ -321,7 +322,6 @@ export default function Wallet({ initialToday, release }: { initialToday: string
       if (request !== walletRequest.current) return;
       setLive(s.entries);
       setMember(s.member);
-      setPlan(s.plan);
       setWalletReady(true);
       setDemo(localStorage.getItem("youqi:hide-demo") === "no");
       setDbError("");
@@ -341,7 +341,7 @@ export default function Wallet({ initialToday, release }: { initialToday: string
           I("manual");
         } else if (chosen) {
           setTab("settings");
-          M("试用已结束，已有订阅仍可查看。");
+          M("试用已结束，可申请永久兑换码。");
         }
       }
     } catch (e: any) {
@@ -448,7 +448,7 @@ export default function Wallet({ initialToday, release }: { initialToday: string
   function start(m: ImportMode) {
     if (!member.active) {
       nav("settings");
-      M("试用已结束，已有订阅仍可查看。");
+      M("试用已结束，可申请永久兑换码。");
       return;
     }
     rememberOpener();
@@ -498,12 +498,12 @@ export default function Wallet({ initialToday, release }: { initialToday: string
     status = member.permanent ? "永久使用" : member.started
       ? member.active
         ? member.paid
-          ? "会员有效"
+          ? "使用权益有效"
           : "试用剩余 " +
-            Math.max(1, Math.ceil((member.end - Date.now()) / 86400000)) +
+            Math.max(1, Math.ceil((member.end - Date.now()) / DAY_MS)) +
             " 天"
         : "使用时长已到期"
-      : "7 天免费试用";
+      : `${TRIAL_DAYS} 天免费试用`;
   const heading = (title: string, end?: React.ReactNode) => (
     <div className="sectionTitle">
       <h2>{title}</h2>
@@ -924,7 +924,7 @@ export default function Wallet({ initialToday, release }: { initialToday: string
           {tab === "settings" && (
             <div className={"settings" + (settingsPage !== "home" ? " settingsSubpage" : "")}>
               {settingsPage === "feedback" ? <CardRequests />
-                : settingsPage === "redeem" ? <RedeemTime onRedeemed={setMember} />
+                : settingsPage === "redeem" ? <RedeemTime onRedeemed={setMember} permanent={member.permanent} />
                 : <>
                   <section className="settingsGroup" aria-labelledby="accountPrefsTitle">
                     <h2 id="accountPrefsTitle">账号与权益</h2>
@@ -932,51 +932,21 @@ export default function Wallet({ initialToday, release }: { initialToday: string
                       {import.meta.env.VITE_DUECUE_ACCOUNTS === "1" && (
                         <SettingsRow icon={CircleUserRound} title="我的账号" caption="昵称与登录方式" href="/account" />
                       )}
-                      <div className="membership">
-                        <div className="memberHero">
-                          <span className="settingIcon tone-purple"><SquareStack size={18} aria-hidden="true" /></span>
-                          <div className="settingText">
-                            <b>{status}</b>
-                            <small>{member.permanent ? "使用权益长期有效" : member.started
-                              ? "有效至 " + new Date(member.end).toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric" })
-                              : "首次保存订阅或完成解析时开始计时。"}</small>
-                          </div>
+                      <div className="settingRow memberHero">
+                        <span className="settingIcon tone-purple"><SquareStack size={18} aria-hidden="true" /></span>
+                        <div className="settingText">
+                          <b>{status}</b>
+                          <small>{member.permanent ? "使用权益长期有效" : member.started
+                            ? "有效至 " + new Date(member.end).toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric" })
+                            : "注册后开始计时"}</small>
                         </div>
-                        {!member.permanent && plan?.preview && (
-                          <details className="membershipPreview">
-                            <summary>查看支付宝购买演示</summary>
-                            <p><b>¥{plan.price}</b> · 知期 {plan.days} 天使用权</p>
-                            <p>核对时长和金额，再进入支付宝收银台。知期确认到账后，会延长当前账号的使用时长。</p>
-                            <small>演示套餐 · 商户收款额度审核中</small>
-                          </details>
-                        )}
-                        {!member.permanent && plan?.ready && (
-                          <button className="primary membershipPurchase" disabled={purchasing} aria-busy={purchasing}
-                            onClick={async () => {
-                              setPurchasing(true);
-                              try {
-                                const result = await requestJSON("/api/checkout", { method: "POST" });
-                                if (result.paid) {
-                                  location.assign("/payment/result?out_trade_no=" + encodeURIComponent(result.orderId));
-                                  return;
-                                }
-                                const doc = new DOMParser().parseFromString(result.paymentHtml, "text/html");
-                                const paymentForm = doc.querySelector("form");
-                                if (!paymentForm) throw new Error("支付宝付款表单无效。");
-                                paymentForm.hidden = true;
-                                document.body.appendChild(paymentForm);
-                                HTMLFormElement.prototype.submit.call(paymentForm);
-                              } catch (e) {
-                                setPurchasing(false);
-                                M(e instanceof Error ? e.message : "暂时无法打开支付宝。");
-                              }
-                            }}>
-                            {purchasing ? "正在打开支付宝…" : `支付宝购买 ${plan.days} 天 · ¥${plan.price}`}
-                          </button>
-                        )}
                       </div>
+                      {!member.permanent && import.meta.env.VITE_DUECUE_ACCOUNTS === "1" && (
+                        <SettingsRow icon={Mail} title="申请永久使用" tone="blue"
+                          caption="发邮件向作者申请兑换码" href={requestPermanentCode} />
+                      )}
                       {import.meta.env.VITE_DUECUE_ACCOUNTS === "1" && (
-                        <SettingsRow icon={Ticket} title="使用兑换码" caption="延长知期使用时长" tone="teal"
+                          <SettingsRow icon={Ticket} title="使用兑换码" caption="兑换知期使用权益" tone="teal"
                           onClick={() => setSettingsPage("redeem")} />
                       )}
                     </div>

@@ -1,6 +1,7 @@
 import {createHash, createHmac, randomBytes, randomInt, randomUUID, scrypt, timingSafeEqual} from 'node:crypto';
 import {promisify} from 'node:util';
 import {sqlite} from './bindings.mjs';
+import {TRIAL_DAYS} from './membership.mjs';
 
 const owner = process.env.DUECUE_USERNAME || 'owner';
 const ownerPassword = process.env.DUECUE_PASSWORD;
@@ -29,6 +30,9 @@ sqlite.exec(`
   CREATE TABLE IF NOT EXISTS auth_limits (bucket TEXT PRIMARY KEY, used INTEGER NOT NULL, expires INTEGER NOT NULL);
   CREATE INDEX IF NOT EXISTS auth_limits_expiry ON auth_limits(expires);
 `);
+sqlite.prepare(`INSERT OR IGNORE INTO members(owner,started)
+  SELECT a.id,? FROM auth_accounts a WHERE NOT EXISTS (SELECT 1 FROM members m WHERE m.owner=a.id)`)
+  .run(Date.now());
 
 const minute = 60000;
 const codeLength = 6;
@@ -181,7 +185,7 @@ function emailPage(res,next,message='',status=200,setup=false,email='') {
   const mode = setup ? hidden('setup','1') : '';
   screen(res,status,setup?'通过邮箱设置密码':'登录知期',
     (setup?'':methodLinks(next,'email'))+errorLine(message)+
-    '<p>'+(setup?'验证邮箱后，输入两次新密码。':'已注册用户验证邮箱后直接登录。首次使用时，验证后会请你设置密码。')+'</p>'+
+    '<p>'+(setup?'验证邮箱后，输入两次新密码。':`已注册用户验证邮箱后直接登录。首次设置密码并完成注册后，即开始 ${TRIAL_DAYS} 天免费试用。`)+'</p>'+
     formStart(res,'/auth/send')+mode+nextField(next)+
     '<label>邮箱<input type="email" name="email" autocomplete="email" maxlength="254" value="'+esc(email)+'" required></label>'+
     '<button>发送验证码</button></form>');
@@ -231,7 +235,10 @@ function verificationEmail(email, code) {
   return {from,to:[email],subject,text,html};
 }
 function setupPage(res,pending,message='',status=200) {
-  screen(res,status,'设置登录密码',errorLine(message)+'<p>邮箱已验证。输入两次相同的密码，以后就能用这个邮箱和密码登录。</p>'+
+  const note = lookupAccount(pending.email)
+    ? '输入两次相同的新密码，保存后即可登录。'
+    : `设置密码完成注册，即开始 ${TRIAL_DAYS} 天免费试用。`;
+  screen(res,status,'设置登录密码',errorLine(message)+'<p>'+note+'</p>'+
     '<div class="account-id"><small>账号</small>'+esc(pending.email)+'</div>'+formStart(res,'/auth/setup')+
     '<label>新密码<input type="password" name="password" autocomplete="new-password" minlength="8" maxlength="128" placeholder="至少 8 个字符" required></label>'+
     '<label>确认密码<input type="password" name="confirm" autocomplete="new-password" minlength="8" maxlength="128" required></label>'+
@@ -353,7 +360,10 @@ export async function accountRoute(req,res,url) {
         const existing=lookupAccount(active.email);
         if (!existing || active.replace_existing) {
           const user=existing?.id || randomUUID();
-          if (!existing) sqlite.prepare('INSERT INTO auth_accounts(id,email) VALUES (?,?)').run(user,active.email);
+          if (!existing) {
+            sqlite.prepare('INSERT INTO auth_accounts(id,email) VALUES (?,?)').run(user,active.email);
+            sqlite.prepare('INSERT INTO members(owner,started) VALUES (?,?)').run(user,Date.now());
+          }
           sqlite.prepare(`INSERT INTO auth_profiles(user_id,password_hash) VALUES (?,?)
             ON CONFLICT(user_id) DO UPDATE SET password_hash=excluded.password_hash`).run(user,encoded);
           if (existing) sqlite.prepare('DELETE FROM auth_sessions WHERE user_id=?').run(user);

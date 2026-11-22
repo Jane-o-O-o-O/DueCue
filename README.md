@@ -14,7 +14,7 @@
 
 <p align="center">
   <a href="https://duecue.jane-zz.online/">
-    <img src="docs/images/duecue-product-preview.jpg" alt="知期 DueCue 界面，左为 iPhone 订阅卡包和下次扣款，右为 iPad 到期日历和本月续费列表" width="1440" />
+    <img src="public/showcase/share.jpg" alt="知期 DueCue 界面，左为 iPhone 订阅卡包和下次扣款，右为 iPad 到期日历和本月续费列表" width="1440" />
   </a>
 </p>
 
@@ -22,7 +22,7 @@
 
 1. 用 iPhone 或 iPad 的 Safari 打开 [知期官网](https://duecue.jane-zz.online/)。
 2. 在 Safari 菜单里点击「分享」→「添加到主屏幕」，然后打开桌面上的「知期」。
-3. 使用邮箱登录或注册，进入卡包后用「截图」或「手动」添加第一笔订阅。
+3. 完成邮箱注册即开始 30 天免费试用。进入卡包后，用「截图」或「手动」添加第一笔订阅。
 
 知期也可以直接在电脑浏览器中使用。
 
@@ -43,14 +43,13 @@
 
 可以。点卡包下方的「预计续费」设置汇总币种。知期按近期可用的汇率折算，并显示所用汇率的日期。
 
-### 试用从什么时候开始？
+### 怎样申请永久使用？
 
-首次保存个人订阅或完成一次 AI 解析后，开始 7 天试用。试用结束后仍可查看已有记录。
+在「设置 → 账号与权益」里点「申请永久使用」，发邮件给作者申请兑换码。收到后，在同一栏打开「使用兑换码」兑换。试用结束后仍可查看已有记录。[发邮件申请](mailto:2689124001@qq.com)
 
 ## 开发与部署
 
 建议使用 Node.js 24。本地预览使用 Vinext 和 Cloudflare D1，VPS 部署使用 Docker Compose 和 SQLite。
 
 - [本地开发、数据库初始化与 VPS 构建](docs/development.md)
-- [支付宝网页支付接入](docs/alipay/README.md)
 - [开发历史说明](HISTORY.md)

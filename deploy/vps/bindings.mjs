@@ -1,33 +1,41 @@
 import { DatabaseSync } from 'node:sqlite';
 import { readFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { request as httpRequest } from 'node:http';
 import { request as httpsRequest } from 'node:https';
 import { Readable } from 'node:stream';
+import { DAY_MS } from './membership.mjs';
 
 const dataDirectory = process.env.DUECUE_DATA || './data';
 mkdirSync(dataDirectory, {recursive:true});
 export const sqlite = new DatabaseSync(join(dataDirectory, 'duecue.sqlite'));
 sqlite.exec('PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000; PRAGMA foreign_keys=ON;');
-const schemaVersion = sqlite.prepare('PRAGMA user_version').get().user_version;
-if (schemaVersion < 3) {
+const schemaVersion = () => sqlite.prepare('PRAGMA user_version').get().user_version;
+if (schemaVersion() !== 4) {
   sqlite.exec('BEGIN IMMEDIATE');
   try {
-    sqlite.exec(readFileSync(new URL('./schema.sql', import.meta.url),'utf8'));
-    if (!sqlite.prepare('PRAGMA table_info(members)').all().some(column => column.name === 'permanent')) {
-      sqlite.exec('ALTER TABLE members ADD COLUMN permanent INTEGER NOT NULL DEFAULT 0 CHECK (permanent IN (0,1))');
+    const version = schemaVersion();
+    if (version > 4) throw Error('Unsupported DueCue database version');
+    if (version < 3) {
+      sqlite.exec(readFileSync(new URL('./schema.sql', import.meta.url),'utf8'));
+      if (!sqlite.prepare('PRAGMA table_info(members)').all().some(column => column.name === 'permanent')) {
+        sqlite.exec('ALTER TABLE members ADD COLUMN permanent INTEGER NOT NULL DEFAULT 0 CHECK (permanent IN (0,1))');
+      }
+      if (!sqlite.prepare('PRAGMA table_info(redemption_codes)').all().some(column => column.name === 'permanent')) {
+        sqlite.exec('ALTER TABLE redemption_codes ADD COLUMN permanent INTEGER NOT NULL DEFAULT 0 CHECK (permanent IN (0,1))');
+      }
     }
-    if (!sqlite.prepare('PRAGMA table_info(redemption_codes)').all().some(column => column.name === 'permanent')) {
-      sqlite.exec('ALTER TABLE redemption_codes ADD COLUMN permanent INTEGER NOT NULL DEFAULT 0 CHECK (permanent IN (0,1))');
+    if (version < 4) {
+      // The previous trial was seven days. Preserve finite extensions when adding the extra 23 days.
+      sqlite.prepare('UPDATE members SET paid_until=paid_until+? WHERE permanent=0 AND paid_until>0')
+        .run(23 * DAY_MS);
+      sqlite.exec('PRAGMA user_version=4');
     }
-    sqlite.exec('PRAGMA user_version=3; COMMIT');
+    sqlite.exec('COMMIT');
   } catch (error) {
     sqlite.exec('ROLLBACK');
     throw error;
   }
-} else if (schemaVersion !== 3) {
-  throw Error('Unsupported DueCue database version');
 }
 
 class Statement {
@@ -57,14 +65,8 @@ const DB = {
 };
 
 export const env = {DB};
-for (const name of ['SCREENSHOT_MODEL_URL','SCREENSHOT_OPENAI_API_KEY','SCREENSHOT_OPENAI_BASE_URL','OPENAI_API_KEY','PLAN_PRICE_CNY','PLAN_DAYS','ALIPAY_APP_ID',
-  'ALIPAY_SELLER_ID','ALIPAY_PUBLIC_KEY','ALIPAY_PRIVATE_KEY','ALIPAY_NOTIFY_URL','ALIPAY_MODE','ALIPAY_MANAGEMENT_TOKEN',
-  'ALIPAY_TEST_OWNER','ALIPAY_REVIEW_OWNER']) {
+for (const name of ['SCREENSHOT_MODEL_URL','SCREENSHOT_OPENAI_API_KEY','SCREENSHOT_OPENAI_BASE_URL','OPENAI_API_KEY']) {
   if (process.env[name]) env[name] = process.env[name].replaceAll('\\n','\n');
-}
-
-if (env.ALIPAY_MODE === 'sandbox') {
-  env.ALIPAY_SANDBOX_PATH = fileURLToPath(new URL('../../.alipay-sandbox.json', import.meta.url));
 }
 
 // Use the application's inference deadline even if the private model has a queue.

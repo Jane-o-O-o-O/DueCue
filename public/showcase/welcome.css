@@ -207,6 +207,7 @@ footer.closing.footer--statement { background: #e7effc; color: var(--p-ink); }
 .footer-notes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-5); }
 .footer-notes h3 { font: 600 16px/1.4 var(--font-text); margin-bottom: var(--s-2); }
 .footer-notes p { color: #3a4a60; max-width: 29em; }
+.footer-notes a { color: #244dcc; text-decoration: underline; text-underline-offset: .15em; }
 .footer__legal { color: #3a4a60; }
 [id] { scroll-margin-top: 0; }
 

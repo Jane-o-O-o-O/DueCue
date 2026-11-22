@@ -7,7 +7,6 @@ import {
   readBody,
 } from "@/lib/server";
 import { normalize } from "@/lib/records";
-import { plan } from "@/lib/billing";
 export const dynamic = "force-dynamic";
 export async function GET(req: Request) {
   const uid = owner(req);
@@ -22,7 +21,6 @@ export async function GET(req: Request) {
   return json({
     entries: result.results.map((r) => JSON.parse(r.data)),
     member,
-    plan: member.permanent ? null : plan(uid),
     ai: !!runtime().OPENAI_API_KEY,
   });
 }
@@ -44,9 +42,6 @@ export async function POST(req: Request) {
     return json({ error: "请核对名称、金额和日期。" }, 400);
   const db = runtime().DB;
   await db.batch([
-    db
-      .prepare("INSERT OR IGNORE INTO members(owner,started) VALUES(?,?)")
-      .bind(uid, Date.now()),
     ...rows.map((r: any) =>
       db
         .prepare(

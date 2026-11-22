@@ -807,22 +807,18 @@ h1 {
   background: white;
   box-shadow: 0 3px 12px #29213f06;
 }
-.settingRow, .memberHero {
+.settingRow {
   display: flex;
   align-items: center;
   gap: 12px;
   min-height: 59px;
   padding: 11px 14px;
-}
-.settingRow {
   width: 100%;
   color: inherit;
   text-align: left;
   text-decoration: none;
 }
-.settingRow + .settingRow,
-.settingsCard .membership,
-.settingsCard .membership + .settingRow {
+.settingRow + .settingRow {
   border-top: 1px solid #f0edf4;
 }
 :is(a, button).settingRow:hover {
@@ -885,19 +881,6 @@ h1 {
 .forecastForm .actions { margin-top: 0; }
 .settingArrow { flex: none; color: #777188; }
 .memberHero { background: #fbf9ff; }
-.membershipPurchase { margin: 0 14px 12px; }
-.membershipPreview {
-  margin: 0 14px 12px;
-  padding: 10px 13px;
-  border: 1px solid #e9def9;
-  border-radius: 14px;
-  background: #fcfaff;
-  color: #382968;
-  font-size: 14px;
-}
-.membershipPreview summary { cursor: pointer; font-weight: 650; }
-.membershipPreview p { margin: 8px 0; line-height: 1.6; }
-.membershipPreview small { color: #62527e; }
 .settingHelp {
   display: flex;
   align-items: center;
@@ -943,6 +926,8 @@ h1 {
 .redeemTime [role="alert"] { background: #fff0f0; color: #8a3541; }
 .redeemTime [role="status"]:not(:empty) { background: #edf7ef; color: #35664c; }
 .redeemTime [role="status"]:empty { display: none; }
+.redeemHelp { color: #5f586e; font-size: 13px; line-height: 1.6; }
+.redeemHelp a { color: #4b3f9a; }
 .modalLayer {
   position: fixed;
   inset: 0;

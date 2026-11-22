@@ -37,12 +37,6 @@ const schema = {
   required: ["items"],
   additionalProperties: false,
 };
-async function startTrial(uid: string) {
-  await runtime()
-    .DB.prepare("INSERT OR IGNORE INTO members(owner,started) VALUES(?,?)")
-    .bind(uid, Date.now())
-    .run();
-}
 export async function POST(req: Request) {
   const uid = owner(req);
   if (!uid || !trustedOrigin(req))
@@ -72,7 +66,6 @@ export async function POST(req: Request) {
     async function result(signal: AbortSignal) {
       try {
         const items = await analyze(screenshots, runtime(), signal);
-        if (items.length) await startTrial(user);
         return { body: { items, member: await entitlement(user) }, status: 200 };
       } catch (error) {
         const message = error instanceof Error && /[\u3400-\u9fff]/.test(error.message)
@@ -110,7 +103,6 @@ export async function POST(req: Request) {
     return json(body, status);
   }
   if (b.engine === "device") {
-    await startTrial(uid);
     return json({ member: await entitlement(uid) });
   }
   const key = runtime().OPENAI_API_KEY;
@@ -195,7 +187,6 @@ export async function POST(req: Request) {
           .join(" · "),
       };
     });
-    if (items.length) await startTrial(uid);
     return json({ items, member: await entitlement(uid) });
   } catch {
     return json({ error: "识别暂未完成，请重试。" }, 502);

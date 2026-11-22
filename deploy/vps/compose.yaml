@@ -26,6 +26,7 @@ services:
       - ./card-requests.mjs:/app/card-requests.mjs:ro
       - ./accounts.mjs:/app/accounts.mjs:ro
       - ./redemption.mjs:/app/redemption.mjs:ro
+      - ./membership.mjs:/app/membership.mjs:ro
       - ./bindings.mjs:/app/bindings.mjs:ro
       - ./package.json:/app/package.json:ro
       - ./schema.sql:/app/schema.sql:ro

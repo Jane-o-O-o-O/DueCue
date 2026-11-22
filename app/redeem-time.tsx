@@ -2,11 +2,15 @@
 
 import { useState, type FormEvent } from "react";
 import { Ticket } from "lucide-react";
+import { authorEmail, requestPermanentCode } from "@/lib/support";
 import { requestJSON } from "./importer";
 
 type Membership = { started: number; end: number; active: boolean; paid: boolean; permanent?: boolean };
 
-export function RedeemTime({ onRedeemed }: { onRedeemed: (member: Membership) => void }) {
+export function RedeemTime({ onRedeemed, permanent }: {
+  onRedeemed: (member: Membership) => void;
+  permanent: boolean;
+}) {
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
@@ -59,6 +63,9 @@ export function RedeemTime({ onRedeemed }: { onRedeemed: (member: Membership) =>
         {error && <p role="alert">{error}</p>}
         <p role="status">{notice}</p>
       </form>
+      {!permanent && <p className="redeemHelp">
+        还没有兑换码？可发邮件至 <a href={requestPermanentCode}>{authorEmail}</a>，向作者申请永久兑换码。
+      </p>}
     </section>
   );
 }

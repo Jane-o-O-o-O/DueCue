@@ -1,9 +1,9 @@
 import {createHash, randomBytes} from 'node:crypto';
 import {pathToFileURL} from 'node:url';
 import {sqlite} from './bindings.mjs';
+import {DAY_MS,TRIAL_MS,membershipStatus} from './membership.mjs';
 
 const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-const day = 86400000;
 const digest = code => createHash('sha256').update(code).digest('hex');
 
 export function issueCode(days, permanent = false) {
@@ -40,18 +40,15 @@ export function redeemCode(user, input) {
           sqlite.prepare('UPDATE members SET permanent=1 WHERE owner=?').run(user);
         } else {
           sqlite.prepare('UPDATE members SET paid_until=max(paid_until, started+?, ?)+? WHERE owner=?')
-            .run(7*day,now,code.days*day,user);
+            .run(TRIAL_MS,now,code.days*DAY_MS,user);
         }
         sqlite.prepare('UPDATE redemption_codes SET used_by=?,used_at=? WHERE digest=?').run(user,now,hash);
       }
-      const {started,paid_until,permanent} = membership.get(user);
-      const now = Date.now();
-      const end = permanent ? 0 : Math.max(started + 7*day, paid_until);
       result = {
         days: code.permanent ? null : code.days,
         permanent: Boolean(code.permanent),
         alreadyRedeemed,
-        member: {started, end, active: Boolean(permanent) || end > now, paid: Boolean(permanent) || paid_until > now, permanent: Boolean(permanent)},
+        member: membershipStatus(membership.get(user)),
       };
     }
     sqlite.exec('COMMIT');
